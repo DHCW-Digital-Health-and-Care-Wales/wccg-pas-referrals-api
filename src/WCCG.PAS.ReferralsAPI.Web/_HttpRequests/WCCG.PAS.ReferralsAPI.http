@@ -1,0 +1,10 @@
+@HostAddress = http://localhost:5069
+@DockerAddress = http://localhost:8080
+
+GET {{HostAddress}}/weatherforecast/
+Accept: application/json
+###
+
+GET {{DockerAddress}}/weatherforecast/
+Accept: application/json
+###
