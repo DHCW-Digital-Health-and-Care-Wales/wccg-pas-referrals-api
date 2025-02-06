@@ -1,4 +1,4 @@
-namespace WCCG.PAS.ReferralsAPI.Web.Models;
+namespace WCCG.PAS.Referrals.API.Models;
 
 public class WeatherForecast
 {

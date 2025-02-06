@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>WCCG.PAS.ReferralsAPI.Unit.Tests</RootNamespace>
+    <RootNamespace>WCCG.PAS.Referrals.API.Unit.Tests</RootNamespace>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\WCCG.PAS.ReferralsAPI.Web\WCCG.PAS.ReferralsAPI.Web.csproj" />
+    <ProjectReference Include="..\..\src\WCCG.PAS.Referrals.API\WCCG.PAS.Referrals.API.csproj" />
   </ItemGroup>
 
 </Project>

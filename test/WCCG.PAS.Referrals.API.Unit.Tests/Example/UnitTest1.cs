@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace WCCG.PAS.ReferralsAPI.Unit.Tests.Example;
+namespace WCCG.PAS.Referrals.API.Unit.Tests.Example;
 
 public class UnitTest1
 {
