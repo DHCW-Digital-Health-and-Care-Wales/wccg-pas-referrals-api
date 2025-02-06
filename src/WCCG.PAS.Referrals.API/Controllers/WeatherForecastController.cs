@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using WCCG.PAS.ReferralsAPI.Web.Models;
+using WCCG.PAS.Referrals.API.Extensions;
+using WCCG.PAS.Referrals.API.Models;
 
-namespace WCCG.PAS.ReferralsAPI.Web.Controllers;
+namespace WCCG.PAS.Referrals.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -22,7 +23,7 @@ public class WeatherForecastController : ControllerBase
     [HttpGet(Name = "GetWeatherForecast")]
     public IEnumerable<WeatherForecast> Get()
     {
-        _logger.LogInformation("Get WeatherForecast");
+        _logger.CalledMethod(nameof(Get));
 
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

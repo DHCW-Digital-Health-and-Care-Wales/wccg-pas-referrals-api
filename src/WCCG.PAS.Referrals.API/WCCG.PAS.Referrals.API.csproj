@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>cafebabe-dead-beef-face-feed12345</UserSecretsId>
-    <RootNamespace>WCCG.PAS.ReferralsAPI.Web</RootNamespace>
+    <RootNamespace>WCCG.PAS.Referrals.API</RootNamespace>
 
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
