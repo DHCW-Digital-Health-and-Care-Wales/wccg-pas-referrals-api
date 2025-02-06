@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCCG.PAS.ReferralsAPI.Web", "src\WCCG.PAS.ReferralsAPI.Web\WCCG.PAS.ReferralsAPI.Web.csproj", "{C7305F63-5FE8-4443-A3E2-782E71A4CCD2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCCG.PAS.ReferralsAPI.Unit.Tests", "test\WCCG.PAS.ReferralsAPI.Unit.Tests\WCCG.PAS.ReferralsAPI.Unit.Tests.csproj", "{30A34BA8-C41C-4870-B930-8FD69E647247}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7305F63-5FE8-4443-A3E2-782E71A4CCD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7305F63-5FE8-4443-A3E2-782E71A4CCD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7305F63-5FE8-4443-A3E2-782E71A4CCD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7305F63-5FE8-4443-A3E2-782E71A4CCD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30A34BA8-C41C-4870-B930-8FD69E647247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30A34BA8-C41C-4870-B930-8FD69E647247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30A34BA8-C41C-4870-B930-8FD69E647247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30A34BA8-C41C-4870-B930-8FD69E647247}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
