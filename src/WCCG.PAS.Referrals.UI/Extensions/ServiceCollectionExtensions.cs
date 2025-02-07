@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using WCCG.PAS.Referrals.UI.Configs;
 using WCCG.PAS.Referrals.UI.Models;
