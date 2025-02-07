@@ -1,0 +1,29 @@
+@page
+@model WCCG.PAS.Referrals.UI.Pages.CosmosViewerModel
+@{
+   var referralCounter = 1;
+}
+
+<table class="table table-hover fs-4">
+  <thead>
+  <tr>
+    <th scope="col">#</th>
+    <th scope="col">Id</th>
+    <th scope="col">Case number</th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
+  <tbody>
+  @foreach(var referral in Model.Referrals)
+  {
+    <tr>
+      <th scope="row">@(referralCounter++)</th>
+      <td>@referral.Id</td>
+      <td>@referral.CaseNumber</td>
+      <td>
+        <a asp-page="/ItemEditor" asp-route-id="@referral.Id">Edit</a>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>

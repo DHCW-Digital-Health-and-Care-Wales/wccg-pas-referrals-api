@@ -16,6 +16,9 @@ riderModule.iml
 .idea/**/dictionaries
 .idea/**/shelf
 
+# Visual Studio 2015
+.vs/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
