@@ -19,7 +19,7 @@ public class CosmosViewerModelTests
     }
 
     [Fact]
-    public async Task OnGet_Should_Call_GetAllAsync()
+    public async Task OnGetShouldCallGetAllAsync()
     {
         //Act
         await _sut.OnGet();
@@ -29,7 +29,7 @@ public class CosmosViewerModelTests
     }
 
     [Fact]
-    public async Task OnGet_Should_Set_Referrals()
+    public async Task OnGetShouldSetReferrals()
     {
         //Arrange
         var allReferrals = _fixture.CreateMany<Referral>().ToList();

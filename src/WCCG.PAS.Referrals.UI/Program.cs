@@ -1,3 +1,4 @@
+using WCCG.PAS.Referrals.UI.Configs;
 using WCCG.PAS.Referrals.UI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,13 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services
-    .AddCosmosClient(builder.Configuration)
-    .AddCosmosRepositories(builder.Configuration)
-    .AddServices();
+builder.Services.Configure<CosmosConfig>(builder.Configuration.GetSection("Cosmos"));
 
-//Home page
-builder.Services.AddMvc().AddRazorPagesOptions(o => { o.Conventions.AddPageRoute("/CosmosViewer", ""); });
+builder.Services.AddCosmosClient(builder.Environment)
+    .AddCosmosRepositories()
+    .AddValidators()
+    .AddServices();
 
 var app = builder.Build();
 

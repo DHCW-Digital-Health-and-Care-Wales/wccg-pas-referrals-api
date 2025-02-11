@@ -1,37 +1,66 @@
+using System.Text.Json;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
 using WCCG.PAS.Referrals.UI.Models;
 using WCCG.PAS.Referrals.UI.Services;
 
 namespace WCCG.PAS.Referrals.UI.Pages;
 
-public class ItemEditorModel(IReferralService referralService) : PageModel
+public class ItemEditorModel(IReferralService referralService, IValidator<Referral> validator) : PageModel
 {
-    public Referral Referral { get; set; }
+    [BindProperty]
+    public required string ReferralJson { get; set; }
 
+    public required string ReferralId { get; set; }
     public bool? IsSaved { get; set; }
-    public string ErrorMessage { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
 
-    public string ReferralJson => JsonConvert.SerializeObject(Referral, Formatting.Indented);
+    private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     public async Task OnGet(string id)
     {
-        Referral = await referralService.GetByIdAsync(id);
+        var referral = await referralService.GetByIdAsync(id);
+
+        ReferralId = referral.Id!;
+        ReferralJson = JsonSerializer.Serialize(referral, _jsonOptions);
     }
 
-    public async Task OnPost(string id, string referralJson)
+    public async Task OnPost()
     {
+        Referral referral;
         try
         {
-            Referral = JsonConvert.DeserializeObject<Referral>(referralJson);
-            await referralService.UpsertAsync(Referral);
+            referral = JsonSerializer.Deserialize<Referral>(ReferralJson)!;
+        }
+        catch (JsonException ex)
+        {
+            HandleErrors(ex.Message);
+            return;
+        }
+
+        var validationResult = await validator.ValidateAsync(referral);
+
+        if (!validationResult.IsValid)
+        {
+            HandleErrors(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
+            return;
+        }
+
+        try
+        {
+            await referralService.UpsertAsync(referral);
             IsSaved = true;
         }
         catch (Exception ex)
         {
-            Referral = await referralService.GetByIdAsync(id);
-            IsSaved = false;
-            ErrorMessage = ex.Message;
+            HandleErrors(ex.Message);
         }
+    }
+
+    private void HandleErrors(params string[] errorMessages)
+    {
+        IsSaved = false;
+        ErrorMessage = errorMessages.Aggregate((f, s) => f + "<br/>" + s);
     }
 }

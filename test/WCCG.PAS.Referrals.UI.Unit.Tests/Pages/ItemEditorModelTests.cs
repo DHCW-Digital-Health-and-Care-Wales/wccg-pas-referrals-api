@@ -1,7 +1,9 @@
+using System.Text.Json;
 using AutoFixture;
 using FluentAssertions;
+using FluentValidation;
+using FluentValidation.Results;
 using Moq;
-using Newtonsoft.Json;
 using WCCG.PAS.Referrals.UI.Models;
 using WCCG.PAS.Referrals.UI.Pages;
 using WCCG.PAS.Referrals.UI.Services;
@@ -14,97 +16,108 @@ public class ItemEditorModelTests
     private readonly IFixture _fixture = new Fixture().WithCustomizations();
     private readonly ItemEditorModel _sut;
 
+    private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
+    private readonly Referral _referral;
+
     public ItemEditorModelTests()
     {
-        _sut = new ItemEditorModel(_fixture.Mock<IReferralService>().Object);
+        _referral = _fixture.Create<Referral>();
+
+        _sut = new ItemEditorModel(_fixture.Mock<IReferralService>().Object, _fixture.Mock<IValidator<Referral>>().Object)
+        {
+            ReferralJson = JsonSerializer.Serialize(_referral, _jsonOptions), ReferralId = _referral.Id!
+        };
     }
 
     [Fact]
-    public async Task OnGet_Should_Call_GetByIdAsync()
+    public async Task OnGetShouldCallGetByIdAsync()
     {
         //Arrange
-        var id = _fixture.Create<string>();
-        var referral = _fixture.Create<Referral>();
+        var expectedJson = JsonSerializer.Serialize(_referral, _jsonOptions);
 
         _fixture.Mock<IReferralService>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(referral);
+            .ReturnsAsync(_referral);
         //Act
-        await _sut.OnGet(id);
+        await _sut.OnGet(_referral.Id!);
 
         //Assert
-        _sut.Referral.Should().BeEquivalentTo(referral);
+        _sut.ReferralId.Should().Be(_referral.Id);
+        _sut.ReferralJson.Should().Be(expectedJson);
 
-        _fixture.Mock<IReferralService>().Verify(r => r.GetByIdAsync(id));
+        _fixture.Mock<IReferralService>().Verify(r => r.GetByIdAsync(_referral.Id!));
     }
 
     [Fact]
-    public async Task OnPost_Should_Call_UpsertAsync_When_DeserializedSuccessfully()
+    public async Task OnPostShouldCallUpsertAsyncWhenDeserializedAndValidatedSuccessfully()
     {
-        //Arrange
-        var id = _fixture.Create<string>();
-        var referral = _fixture.Create<Referral>();
-        var referralJson = JsonConvert.SerializeObject(referral);
-
         //Act
-        await _sut.OnPost(id, referralJson);
+        await _sut.OnPost();
 
         //Assert
-        _sut.Referral.Should().BeEquivalentTo(referral);
         _sut.IsSaved.Should().BeTrue();
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(referral))));
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(_referral))));
     }
 
     [Fact]
-    public async Task OnPost_Should_Call_GetByIdAsync_When_DeserializationFailed()
+    public async Task OnPostShouldHandleErrorsWhenDeserializationFailed()
     {
         //Arrange
-        var id = _fixture.Create<string>();
         var invalidReferral = _fixture.Create<string>();
-        var invalidReferralJson = JsonConvert.SerializeObject(invalidReferral);
+        _sut.ReferralJson = JsonSerializer.Serialize(invalidReferral, _jsonOptions);
 
-        var originalReferral = _fixture.Create<Referral>();
         _fixture.Mock<IReferralService>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(originalReferral);
+            .ReturnsAsync(_referral);
 
         //Act
-        await _sut.OnPost(id, invalidReferralJson);
+        await _sut.OnPost();
 
         //Assert
-        _sut.Referral.Should().BeEquivalentTo(originalReferral);
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().NotBeEmpty();
 
         _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<Referral>()), Times.Never());
-        _fixture.Mock<IReferralService>().Verify(s => s.GetByIdAsync(id));
     }
 
     [Fact]
-    public async Task OnPost_Should_Call_GetByIdAsync_When_UpsertFailed()
+    public async Task OnPostShouldHandleErrorsWhenValidationFailed()
     {
         //Arrange
-        var id = _fixture.Create<string>();
-        var referral = _fixture.Create<Referral>();
-        var referralJson = JsonConvert.SerializeObject(referral);
+        var validationResult = _fixture.Build<ValidationResult>()
+            .With(x => x.Errors, _fixture.CreateMany<ValidationFailure>().ToList)
+            .Create();
+        var expectedErrorMessage = validationResult.Errors.Select(x => x.ErrorMessage).Aggregate((f, s) => f + "<br/>" + s);
 
-        var errorMessage = _fixture.Create<string>();
-
-        var originalReferral = _fixture.Create<Referral>();
-        _fixture.Mock<IReferralService>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(originalReferral);
-
-        _fixture.Mock<IReferralService>().Setup(s => s.UpsertAsync(It.IsAny<Referral>()))
-            .ThrowsAsync(new Exception(errorMessage));
+        _fixture.Mock<IValidator<Referral>>().Setup(r => r.ValidateAsync(It.IsAny<Referral>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(validationResult);
 
         //Act
-        await _sut.OnPost(id, referralJson);
+        await _sut.OnPost();
 
         //Assert
-        _sut.Referral.Should().BeEquivalentTo(originalReferral);
+        _sut.IsSaved.Should().BeFalse();
+        _sut.ErrorMessage.Should().Be(expectedErrorMessage);
+
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<Referral>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task OnPostShouldHandleErrorsWhenUpsertFailed()
+    {
+        //Arrange
+        var errorMessage = _fixture.Create<string>();
+
+        _fixture.Mock<IReferralService>().Setup(s => s.UpsertAsync(It.IsAny<Referral>()))
+            .ThrowsAsync(new ArgumentException(errorMessage));
+
+        //Act
+        await _sut.OnPost();
+
+        //Assert
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().Be(errorMessage);
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(referral))));
-        _fixture.Mock<IReferralService>().Verify(s => s.GetByIdAsync(id));
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(_referral))));
     }
 }

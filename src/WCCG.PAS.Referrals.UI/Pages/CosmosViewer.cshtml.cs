@@ -6,7 +6,7 @@ namespace WCCG.PAS.Referrals.UI.Pages;
 
 public class CosmosViewerModel(IReferralService service) : PageModel
 {
-    public IEnumerable<Referral> Referrals { get; set; }
+    public IEnumerable<Referral> Referrals { get; set; } = [];
 
     public async Task OnGet()
     {

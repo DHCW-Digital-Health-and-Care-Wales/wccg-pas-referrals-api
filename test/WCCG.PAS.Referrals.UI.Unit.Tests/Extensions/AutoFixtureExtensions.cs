@@ -14,9 +14,9 @@ public static class AutoFixtureExtensions
         {
             var type = parameterInfo.ParameterType;
             var mockType = typeof(Mock<>).MakeGenericType(type);
-            typeof(FixtureFreezer).GetMethod("Freeze", new[] { typeof(IFixture) })
+            typeof(FixtureFreezer).GetMethod("Freeze", [typeof(IFixture)])!
                 .MakeGenericMethod(mockType)
-                .Invoke(null, new object[] { fixture });
+                .Invoke(null, [fixture]);
         }
 
         return fixture.Create<T>();

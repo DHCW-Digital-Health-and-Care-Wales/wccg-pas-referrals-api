@@ -1,48 +1,56 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Identity;
+using FluentValidation;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.UI.Configs;
 using WCCG.PAS.Referrals.UI.Models;
 using WCCG.PAS.Referrals.UI.Repositories;
 using WCCG.PAS.Referrals.UI.Services;
+using WCCG.PAS.Referrals.UI.Validators;
 
 namespace WCCG.PAS.Referrals.UI.Extensions;
 
 [ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCosmosClient(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCosmosClient(this IServiceCollection services, IHostEnvironment environment)
     {
         var cosmosClientOptions = new CosmosClientOptions
         {
             SerializerOptions = new CosmosSerializationOptions { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase }
         };
 
-#if DEBUG
-        var authKey = configuration.GetValue<string>("Cosmos:AuthKey");
-        var dbEndpoint = configuration.GetValue<string>("Cosmos:DbEndpoint");
-        services.AddSingleton(_ => new CosmosClient(dbEndpoint, authKey, cosmosClientOptions));
-#else
-        var dbEndpoint = configuration.GetValue<string>("Cosmos::DbEndpoint");
-        services.AddSingleton(_ => new CosmosClient(dbEndpoint, new DefaultAzureCredential(), cosmosClientOptions));
-#endif
-        return services;
+        if (environment.IsDevelopment())
+            return services.AddSingleton(provider =>
+            {
+                var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
+                return new CosmosClient(cosmosConfig?.DatabaseEndpoint, cosmosConfig?.AuthKey, cosmosClientOptions);
+            });
+
+        return services.AddSingleton(provider =>
+        {
+            var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
+            return new CosmosClient(cosmosConfig?.DatabaseEndpoint, new DefaultAzureCredential(), cosmosClientOptions);
+        });
     }
 
-    public static IServiceCollection AddCosmosRepositories(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCosmosRepositories(this IServiceCollection services)
     {
-        var referralsCosmosConfig = configuration.GetSection("Cosmos:Referrals").Get<CosmosConfig>();
-
-        services.AddSingleton<ICosmosRepository<Referral>>(s =>
-            new CosmosRepository<Referral>(s.GetService<CosmosClient>(), referralsCosmosConfig));
-
-        return services;
+        return services.AddSingleton<ICosmosRepository<Referral>>(provider =>
+        {
+            var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
+            return new CosmosRepository<Referral>(provider.GetService<CosmosClient>()!, cosmosConfig!);
+        });
     }
 
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddTransient<IReferralService, ReferralService>();
+        return services.AddScoped<IReferralService, ReferralService>();
+    }
 
-        return services;
+    public static IServiceCollection AddValidators(this IServiceCollection services)
+    {
+        return services.AddScoped<IValidator<Referral>, ReferralValidator>();
     }
 }

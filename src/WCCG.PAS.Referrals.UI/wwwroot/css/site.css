@@ -24,14 +24,6 @@ body {
   text-decoration: none;
 }
 
-.logo-wrapper {
-  height: 130px;
-}
-
-.logo-wrapper svg {
-  height: 100%;
-}
-
 .CodeMirror {
   height: auto;
   border: 1px solid #ddd;

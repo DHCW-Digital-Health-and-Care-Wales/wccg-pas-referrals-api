@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using WCCG.PAS.Referrals.UI.Configs;
 
 namespace WCCG.PAS.Referrals.UI.Repositories;
@@ -24,10 +25,7 @@ public class CosmosRepository<T> : ICosmosRepository<T>
 
     public async Task<IEnumerable<T>> GetAllAsync()
     {
-        var sqlQueryText = "SELECT * FROM c";
-        var queryDefinition = new QueryDefinition(sqlQueryText);
-
-        var queryResultSetIterator = _container.GetItemQueryIterator<T>(queryDefinition);
+        using var queryResultSetIterator = _container.GetItemLinqQueryable<T>().ToFeedIterator();
 
         var itemsList = new List<T>();
 
