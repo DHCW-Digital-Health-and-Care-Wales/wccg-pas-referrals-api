@@ -5,11 +5,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  call-common-workflow:
+  common:
     uses: "./.github/workflows/build-common.yml"
 
   docker-image-build:
-    needs: call-common-workflow
+    needs: common
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +20,15 @@ jobs:
 
       - name: Files
         run: |
-          ls -R .
+          ls -alR
+
+      - name: Files 2
+        run: |
+          ls -alR ${{ github.workspace }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ github.workspace }}
           push: true
           tags: user/app:latest
