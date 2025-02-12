@@ -4,7 +4,7 @@ using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using Moq;
-using WCCG.PAS.Referrals.UI.Models;
+using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Pages;
 using WCCG.PAS.Referrals.UI.Services;
 using WCCG.PAS.Referrals.UI.Unit.Tests.Extensions;
@@ -18,15 +18,15 @@ public class ItemEditorModelTests
 
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
-    private readonly Referral _referral;
+    private readonly ReferralDbModel _referralDbModel;
 
     public ItemEditorModelTests()
     {
-        _referral = _fixture.Create<Referral>();
+        _referralDbModel = _fixture.Create<ReferralDbModel>();
 
-        _sut = new ItemEditorModel(_fixture.Mock<IReferralService>().Object, _fixture.Mock<IValidator<Referral>>().Object)
+        _sut = new ItemEditorModel(_fixture.Mock<IReferralService>().Object, _fixture.Mock<IValidator<ReferralDbModel>>().Object)
         {
-            ReferralJson = JsonSerializer.Serialize(_referral, _jsonOptions), ReferralId = _referral.Id!
+            ReferralJson = JsonSerializer.Serialize(_referralDbModel, _jsonOptions), ReferralId = _referralDbModel.Id!
         };
     }
 
@@ -34,18 +34,18 @@ public class ItemEditorModelTests
     public async Task OnGetShouldCallGetByIdAsync()
     {
         //Arrange
-        var expectedJson = JsonSerializer.Serialize(_referral, _jsonOptions);
+        var expectedJson = JsonSerializer.Serialize(_referralDbModel, _jsonOptions);
 
         _fixture.Mock<IReferralService>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(_referral);
+            .ReturnsAsync(_referralDbModel);
         //Act
-        await _sut.OnGet(_referral.Id!);
+        await _sut.OnGet(_referralDbModel.Id!);
 
         //Assert
-        _sut.ReferralId.Should().Be(_referral.Id);
+        _sut.ReferralId.Should().Be(_referralDbModel.Id);
         _sut.ReferralJson.Should().Be(expectedJson);
 
-        _fixture.Mock<IReferralService>().Verify(r => r.GetByIdAsync(_referral.Id!));
+        _fixture.Mock<IReferralService>().Verify(r => r.GetByIdAsync(_referralDbModel.Id!));
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class ItemEditorModelTests
         //Assert
         _sut.IsSaved.Should().BeTrue();
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(_referral))));
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<ReferralDbModel>(r => r.IsEquivalentTo(_referralDbModel))));
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class ItemEditorModelTests
         _sut.ReferralJson = JsonSerializer.Serialize(invalidReferral, _jsonOptions);
 
         _fixture.Mock<IReferralService>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync(_referral);
+            .ReturnsAsync(_referralDbModel);
 
         //Act
         await _sut.OnPost();
@@ -77,7 +77,7 @@ public class ItemEditorModelTests
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().NotBeEmpty();
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<Referral>()), Times.Never());
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<ReferralDbModel>()), Times.Never());
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class ItemEditorModelTests
             .Create();
         var expectedErrorMessage = validationResult.Errors.Select(x => x.ErrorMessage).Aggregate((f, s) => f + "<br/>" + s);
 
-        _fixture.Mock<IValidator<Referral>>().Setup(r => r.ValidateAsync(It.IsAny<Referral>(), It.IsAny<CancellationToken>()))
+        _fixture.Mock<IValidator<ReferralDbModel>>().Setup(r => r.ValidateAsync(It.IsAny<ReferralDbModel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(validationResult);
 
         //Act
@@ -99,7 +99,7 @@ public class ItemEditorModelTests
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().Be(expectedErrorMessage);
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<Referral>()), Times.Never());
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.IsAny<ReferralDbModel>()), Times.Never());
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class ItemEditorModelTests
         //Arrange
         var errorMessage = _fixture.Create<string>();
 
-        _fixture.Mock<IReferralService>().Setup(s => s.UpsertAsync(It.IsAny<Referral>()))
+        _fixture.Mock<IReferralService>().Setup(s => s.UpsertAsync(It.IsAny<ReferralDbModel>()))
             .ThrowsAsync(new ArgumentException(errorMessage));
 
         //Act
@@ -118,6 +118,6 @@ public class ItemEditorModelTests
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().Be(errorMessage);
 
-        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<Referral>(r => r.IsEquivalentTo(_referral))));
+        _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<ReferralDbModel>(r => r.IsEquivalentTo(_referralDbModel))));
     }
 }

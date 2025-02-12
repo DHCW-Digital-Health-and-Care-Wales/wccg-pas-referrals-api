@@ -7,11 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 builder.Services.Configure<CosmosConfig>(builder.Configuration.GetSection("Cosmos"));
+builder.Services.Configure<ManagedIdentityConfig>(builder.Configuration.GetSection("ManagedIdentity"));
 
-builder.Services.AddCosmosClient(builder.Environment)
-    .AddCosmosRepositories()
-    .AddValidators()
-    .AddServices();
+var clientId = builder.Configuration.GetValue<string>("ManagedIdentity:ClientId")!;
+builder.Services.AddApplicationInsights(builder.Environment, clientId);
+
+builder.Services.AddCosmosClient(builder.Environment);
+builder.Services.AddCosmosRepositories();
+builder.Services.AddValidators();
+builder.Services.AddServices();
 
 var app = builder.Build();
 

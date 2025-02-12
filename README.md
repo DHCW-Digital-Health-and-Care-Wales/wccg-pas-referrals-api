@@ -10,11 +10,4 @@ The UI for checking and editing existing referrals in Cosmos DB.
 ## Local development
 
 1. Set up local configuration by editing `appsettings.Development.json` file
-2. Set `AuthKey' value for Cosmos DB in you user secrects file:
-    ```json
-    {
-        "Cosmos": {
-            "AuthKey": "YOUR_AUTH_KEY"
-        }
-    }
-    ```
+2. Use 'az login --tenant <TENANT-ID>' to access cosmos DB

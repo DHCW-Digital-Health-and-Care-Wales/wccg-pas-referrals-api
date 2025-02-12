@@ -2,19 +2,19 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using WCCG.PAS.Referrals.UI.Models;
+using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Services;
 
 namespace WCCG.PAS.Referrals.UI.Pages;
 
-public class ItemEditorModel(IReferralService referralService, IValidator<Referral> validator) : PageModel
+public class ItemEditorModel(IReferralService referralService, IValidator<ReferralDbModel> validator) : PageModel
 {
     [BindProperty]
     public required string ReferralJson { get; set; }
 
     public required string ReferralId { get; set; }
     public bool? IsSaved { get; set; }
-    public string ErrorMessage { get; set; } = string.Empty;
+    public string? ErrorMessage { get; set; }
 
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
@@ -28,25 +28,49 @@ public class ItemEditorModel(IReferralService referralService, IValidator<Referr
 
     public async Task OnPost()
     {
-        Referral referral;
+        var referral = DeserializeReferral();
+        if (referral is null)
+        {
+            return;
+        }
+
+        var isValid = await IsReferralValidAsync(referral);
+        if (!isValid)
+        {
+            return;
+        }
+
+        await UpsertReferralAsync(referral);
+    }
+
+    private ReferralDbModel? DeserializeReferral()
+    {
         try
         {
-            referral = JsonSerializer.Deserialize<Referral>(ReferralJson)!;
+            return JsonSerializer.Deserialize<ReferralDbModel>(ReferralJson)!;
         }
         catch (JsonException ex)
         {
             HandleErrors(ex.Message);
-            return;
         }
 
+        return null;
+    }
+
+    private async Task<bool> IsReferralValidAsync(ReferralDbModel referral)
+    {
         var validationResult = await validator.ValidateAsync(referral);
 
         if (!validationResult.IsValid)
         {
             HandleErrors(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
-            return;
         }
 
+        return validationResult.IsValid;
+    }
+
+    private async Task UpsertReferralAsync(ReferralDbModel referral)
+    {
         try
         {
             await referralService.UpsertAsync(referral);

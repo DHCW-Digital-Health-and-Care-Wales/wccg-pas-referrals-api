@@ -1,6 +1,6 @@
 using AutoFixture;
 using FluentValidation.TestHelper;
-using WCCG.PAS.Referrals.UI.Models;
+using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Unit.Tests.Extensions;
 using WCCG.PAS.Referrals.UI.Validators;
 
@@ -22,7 +22,7 @@ public class ReferralValidatorTests
     public async Task ShouldContainErrorWhenIdInvalid(string id)
     {
         //Arrange
-        var referral = _fixture.Build<Referral>()
+        var referral = _fixture.Build<ReferralDbModel>()
             .With(x => x.Id, id)
             .Create();
 
@@ -39,7 +39,7 @@ public class ReferralValidatorTests
     public async Task ShouldContainErrorWhenCaseNumberInvalid(string caseNumber)
     {
         //Arrange
-        var referral = _fixture.Build<Referral>()
+        var referral = _fixture.Build<ReferralDbModel>()
             .With(x => x.CaseNumber, caseNumber)
             .Create();
 
@@ -54,7 +54,7 @@ public class ReferralValidatorTests
     public async Task ShouldNotContainErrorsWhenModelIsValid()
     {
         //Arrange
-        var referral = _fixture.Create<Referral>();
+        var referral = _fixture.Create<ReferralDbModel>();
 
         //Act
         var result = await _sut.TestValidateAsync(referral);

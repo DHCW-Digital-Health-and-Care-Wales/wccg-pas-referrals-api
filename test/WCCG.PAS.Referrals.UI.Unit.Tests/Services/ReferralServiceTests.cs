@@ -1,7 +1,7 @@
 using AutoFixture;
 using FluentAssertions;
 using Moq;
-using WCCG.PAS.Referrals.UI.Models;
+using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Repositories;
 using WCCG.PAS.Referrals.UI.Services;
 using WCCG.PAS.Referrals.UI.Unit.Tests.Extensions;
@@ -22,10 +22,10 @@ public class ReferralServiceTests
     public async Task UpsertAsyncShouldCallRepoMethod()
     {
         //Arrange
-        var referral = _fixture.Create<Referral>();
+        var referral = _fixture.Create<ReferralDbModel>();
         var upsertResult = _fixture.Create<bool>();
 
-        _fixture.Mock<ICosmosRepository<Referral>>().Setup(r => r.UpsertAsync(It.IsAny<Referral>()))
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Setup(r => r.UpsertAsync(It.IsAny<ReferralDbModel>()))
             .ReturnsAsync(upsertResult);
 
         //Act
@@ -33,16 +33,16 @@ public class ReferralServiceTests
 
         //Assert
         result.Should().Be(upsertResult);
-        _fixture.Mock<ICosmosRepository<Referral>>().Verify(r => r.UpsertAsync(referral));
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Verify(r => r.UpsertAsync(referral));
     }
 
     [Fact]
     public async Task GetAllAsyncShouldCallRepoMethod()
     {
         //Arrange
-        var allReferrals = _fixture.CreateMany<Referral>().ToList();
+        var allReferrals = _fixture.CreateMany<ReferralDbModel>().ToList();
 
-        _fixture.Mock<ICosmosRepository<Referral>>().Setup(r => r.GetAllAsync())
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Setup(r => r.GetAllAsync())
             .ReturnsAsync(allReferrals);
 
         //Act
@@ -50,7 +50,7 @@ public class ReferralServiceTests
 
         //Assert
         result.Should().BeEquivalentTo(allReferrals);
-        _fixture.Mock<ICosmosRepository<Referral>>().Verify(r => r.GetAllAsync());
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Verify(r => r.GetAllAsync());
     }
 
     [Fact]
@@ -58,9 +58,9 @@ public class ReferralServiceTests
     {
         //Arrange
         var id = _fixture.Create<string>();
-        var referral = _fixture.Create<Referral>();
+        var referral = _fixture.Create<ReferralDbModel>();
 
-        _fixture.Mock<ICosmosRepository<Referral>>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Setup(r => r.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync(referral);
 
         //Act
@@ -68,6 +68,6 @@ public class ReferralServiceTests
 
         //Assert
         result.Should().BeEquivalentTo(referral);
-        _fixture.Mock<ICosmosRepository<Referral>>().Verify(r => r.GetByIdAsync(id));
+        _fixture.Mock<ICosmosRepository<ReferralDbModel>>().Verify(r => r.GetByIdAsync(id));
     }
 }

@@ -1,6 +1,6 @@
-namespace WCCG.PAS.Referrals.UI.Models;
+namespace WCCG.PAS.Referrals.UI.DbModels;
 
-public class Referral
+public class ReferralDbModel
 {
     public string? Id { get; set; }
 

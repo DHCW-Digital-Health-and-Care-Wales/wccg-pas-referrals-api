@@ -1,21 +1,21 @@
 using AutoFixture;
 using FluentAssertions;
 using Moq;
-using WCCG.PAS.Referrals.UI.Models;
+using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Pages;
 using WCCG.PAS.Referrals.UI.Services;
 using WCCG.PAS.Referrals.UI.Unit.Tests.Extensions;
 
 namespace WCCG.PAS.Referrals.UI.Unit.Tests.Pages;
 
-public class CosmosViewerModelTests
+public class IndexModelTests
 {
     private readonly IFixture _fixture = new Fixture().WithCustomizations();
-    private readonly CosmosViewerModel _sut;
+    private readonly IndexModel _sut;
 
-    public CosmosViewerModelTests()
+    public IndexModelTests()
     {
-        _sut = new CosmosViewerModel(_fixture.Mock<IReferralService>().Object);
+        _sut = new IndexModel(_fixture.Mock<IReferralService>().Object);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class CosmosViewerModelTests
     public async Task OnGetShouldSetReferrals()
     {
         //Arrange
-        var allReferrals = _fixture.CreateMany<Referral>().ToList();
+        var allReferrals = _fixture.CreateMany<ReferralDbModel>().ToList();
         _fixture.Mock<IReferralService>().Setup(r => r.GetAllAsync())
             .ReturnsAsync(allReferrals);
 
