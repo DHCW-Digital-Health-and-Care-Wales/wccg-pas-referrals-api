@@ -5,11 +5,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  common:
-    uses: "./.github/workflows/build-common.yml"
+#  common:
+#    uses: "./.github/workflows/build-common.yml"
 
   docker-image-build:
-    needs: common
+#    needs: common
     runs-on: ubuntu-latest
 
     steps:
@@ -17,6 +17,10 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+
+      - uses: actions/checkout@v4
+        name: "Checkout branch"
 
       - name: Files
         run: |
