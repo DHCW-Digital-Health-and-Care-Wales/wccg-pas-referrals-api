@@ -25,7 +25,7 @@ jobs:
         run: dotnet build --no-restore --configuration ${{ env.BUILD_CONFIGURATION }}
 
       - name: "Run Tests"
-        run: dotnet test --no-restore --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --logger trx --collect "XPlat Code Coverage"
+        run: dotnet test --no-restore --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --logger trx --collect "XPlat Code Coverage" --settings coverlet.runsettings
 
       - name: Coverage Report Generator
         uses: danielpalme/ReportGenerator-GitHub-Action@5.4.4
@@ -50,7 +50,7 @@ jobs:
         with:
           filename: "Cobertura.xml"
           badge: true
-          fail_below_min: false # just informative for now
+          fail_below_min: true
           format: markdown
           hide_branch_rate: false
           hide_complexity: true
@@ -63,3 +63,16 @@ jobs:
         with:
           recreate: true
           path: code-coverage-results.md
+
+      - name: Upload Test Result Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ github.workspace }}/**/TestResults/**/*
+          retention-days: 5
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2.16.1
+        if: always()
+        with:
+          trx_files: "${{ github.workspace }}/**/*.trx"
