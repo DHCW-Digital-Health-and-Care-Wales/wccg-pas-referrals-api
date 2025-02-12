@@ -5,11 +5,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-#  common:
-#    uses: "./.github/workflows/build-common.yml"
+  common:
+    uses: "./.github/workflows/build-common.yml"
 
   docker-image-build:
-#    needs: common
+    needs: common
     runs-on: ubuntu-latest
 
     steps:
@@ -17,10 +17,6 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-
-      - uses: actions/checkout@v4
-        name: "Checkout branch"
 
       - name: Files
         run: |
@@ -30,12 +26,4 @@ jobs:
       - name: Build and push WebApp image
         working-directory: "./src/WCCG.PAS.Referrals.API"
         run: |
-          docker build -t user/app:latest .
-
-#      - name: Build and push
-#        uses: docker/build-push-action@v6
-#        with:
-#          context: .
-#          file: "src/WCCG.PAS.Referrals.API/Dockerfile"
-#          push: false
-#          tags: user/app:latest
+          docker build -t pas/referrals.api:latest .
