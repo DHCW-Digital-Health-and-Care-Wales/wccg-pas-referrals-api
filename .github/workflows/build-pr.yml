@@ -18,6 +18,10 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Files
+        run: |
+          ls -R .
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
