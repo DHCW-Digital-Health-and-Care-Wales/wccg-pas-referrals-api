@@ -16,4 +16,5 @@ jobs:
       - name: Build Docker Image
         working-directory: .
         run: |
-          docker build .
+          tree
+          docker build -f ./Dockerfile
