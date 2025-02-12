@@ -20,15 +20,15 @@ jobs:
 
       - name: Files
         run: |
-          ls -alR
+          find . -type f
 
       - name: Files 2
         run: |
-          ls -alR ${{ github.workspace }}
+          ls -al ${{ github.workspace }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ${{ github.workspace }}
+          file: "src/WCCG.PAS.Referrals.API/Dockerfile"
           push: true
           tags: user/app:latest
