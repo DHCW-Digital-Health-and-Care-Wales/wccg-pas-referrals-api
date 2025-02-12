@@ -26,15 +26,16 @@ jobs:
         run: |
           pwd
           ls -al ${{ github.workspace }}
-          ls
-          ls -l
-          ls -a
-          ls -R
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: "src/WCCG.PAS.Referrals.API/Dockerfile"
-          push: false
-          tags: user/app:latest
+      - name: Build and push WebApp image
+        working-directory: "./src/WCCG.PAS.Referrals.API"
+        run: |
+          docker build -t user/app:latest .
+
+#      - name: Build and push
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: .
+#          file: "src/WCCG.PAS.Referrals.API/Dockerfile"
+#          push: false
+#          tags: user/app:latest
