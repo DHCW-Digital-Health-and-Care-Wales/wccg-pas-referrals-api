@@ -1,7 +1,7 @@
 name: build-ci.yml
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
@@ -13,5 +13,5 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Another one main branch"
-        run: "echo 123 - main"
+      - name: "Another one"
+        run: "echo 123"

@@ -1,0 +1,28 @@
+name: build-ci.yml
+on:
+  workflow_call:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      BUILD_CONFIGURATION: Release
+
+    steps:
+      - uses: actions/checkout@v4
+        name: "Checkout branch"
+
+      - name: "Setup .NET Core v8 SDK"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: "DotNet Restore"
+        run: dotnet restore
+
+      - name: "DotNet Build"
+        run: dotnet build --no-restore --configuration ${{ env.BUILD_CONFIGURATION }}
+
+      - name: "Run Tests"
+        run: dotnet test --no-restore --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --collect "XPlat Code Coverage"
