@@ -15,7 +15,7 @@ RUN dotnet build "./WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /a
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --no-build
+RUN dotnet publish "./WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
