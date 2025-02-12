@@ -26,3 +26,40 @@ jobs:
 
       - name: "Run Tests"
         run: dotnet test --no-restore --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity normal --collect "XPlat Code Coverage"
+
+      - name: Coverage Report Generator
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.4
+        with:
+          reports: "**/*.cobertura.xml"
+          targetdir: "${{ github.workspace }}"
+          reporttypes: "Cobertura"
+          verbosity: "Info"
+          title: "Code Coverage"
+          tag: "${{ github.run_number }}_${{ github.run_id }}" # Optional tag or build version.
+          toolpath: "reportgeneratortool" # Default directory for installing the dotnet tool.
+
+      - name: Upload Combined Coverage XML
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: "${{ github.workspace }}/Cobertura.xml"
+          retention-days: 5
+
+      - name: Publish Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: "Cobertura.xml"
+          badge: true
+          fail_below_min: false # just informative for now
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: false
+          indicators: true
+          output: both
+          thresholds: "10 30"
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: code-coverage-results.md
