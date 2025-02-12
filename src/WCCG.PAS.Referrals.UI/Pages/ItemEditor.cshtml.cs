@@ -7,7 +7,8 @@ using WCCG.PAS.Referrals.UI.Services;
 
 namespace WCCG.PAS.Referrals.UI.Pages;
 
-public class ItemEditorModel(IReferralService referralService, IValidator<ReferralDbModel> validator) : PageModel
+public class ItemEditorModel
+    (IReferralService referralService, IValidator<ReferralDbModel> validator, ILogger<ItemEditorModel> logger) : PageModel
 {
     [BindProperty]
     public required string ReferralJson { get; set; }
@@ -51,6 +52,7 @@ public class ItemEditorModel(IReferralService referralService, IValidator<Referr
         }
         catch (JsonException ex)
         {
+            logger.LogError(ex.Message);
             HandleErrors(ex.Message);
         }
 
@@ -61,12 +63,16 @@ public class ItemEditorModel(IReferralService referralService, IValidator<Referr
     {
         var validationResult = await validator.ValidateAsync(referral);
 
-        if (!validationResult.IsValid)
+        if (validationResult.IsValid)
         {
-            HandleErrors(validationResult.Errors.Select(x => x.ErrorMessage).ToArray());
+            return true;
         }
 
-        return validationResult.IsValid;
+        var errors = validationResult.Errors.Select(x => x.ErrorMessage).ToArray();
+        logger.LogError($"Validation errors: {string.Join(';', errors)}");
+        HandleErrors(errors);
+
+        return false;
     }
 
     private async Task UpsertReferralAsync(ReferralDbModel referral)
@@ -78,6 +84,7 @@ public class ItemEditorModel(IReferralService referralService, IValidator<Referr
         }
         catch (Exception ex)
         {
+            logger.LogError(ex.Message);
             HandleErrors(ex.Message);
         }
     }

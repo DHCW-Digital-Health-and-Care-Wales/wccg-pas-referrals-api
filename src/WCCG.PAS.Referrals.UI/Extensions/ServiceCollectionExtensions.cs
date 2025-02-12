@@ -19,13 +19,16 @@ public static class ServiceCollectionExtensions
     {
         services.AddApplicationInsightsTelemetry();
 
-        if (environment.IsDevelopment())
+        services.Configure<TelemetryConfiguration>(config =>
         {
-            services.Configure<TelemetryConfiguration>(config => { config.SetAzureTokenCredential(new AzureCliCredential()); });
-            return;
-        }
+            if (environment.IsDevelopment())
+            {
+                config.SetAzureTokenCredential(new AzureCliCredential());
+                return;
+            }
 
-        services.Configure<TelemetryConfiguration>(config => { config.SetAzureTokenCredential(new ManagedIdentityCredential(clientId)); });
+            config.SetAzureTokenCredential(new ManagedIdentityCredential(clientId));
+        });
     }
 
     public static void AddCosmosClient(this IServiceCollection services, IHostEnvironment environment)

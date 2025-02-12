@@ -3,6 +3,7 @@ using AutoFixture;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 using Moq;
 using WCCG.PAS.Referrals.UI.DbModels;
 using WCCG.PAS.Referrals.UI.Pages;
@@ -24,7 +25,10 @@ public class ItemEditorModelTests
     {
         _referralDbModel = _fixture.Create<ReferralDbModel>();
 
-        _sut = new ItemEditorModel(_fixture.Mock<IReferralService>().Object, _fixture.Mock<IValidator<ReferralDbModel>>().Object)
+        _sut = new ItemEditorModel(
+            _fixture.Mock<IReferralService>().Object,
+            _fixture.Mock<IValidator<ReferralDbModel>>().Object,
+            _fixture.Mock<ILogger<ItemEditorModel>>().Object)
         {
             ReferralJson = JsonSerializer.Serialize(_referralDbModel, _jsonOptions), ReferralId = _referralDbModel.Id!
         };
