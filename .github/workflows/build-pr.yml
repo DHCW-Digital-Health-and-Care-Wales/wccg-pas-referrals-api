@@ -1,8 +1,8 @@
 name: build-pr.yml
 on:
   workflow_dispatch:
-#  pull_request:
-#    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
@@ -37,7 +37,7 @@ jobs:
           reporttypes: "Cobertura"
           verbosity: "Info"
           title: "Code Coverage"
-          tag: "${{ github.run_number }}_${{ github.run_id }}" # Optional tag or build version.
+          tag: "${{ github.run_number }}_${{ github.run_id }}"
           toolpath: "reportgeneratortool"
 
       - name: "Upload Combined Coverage XML"
