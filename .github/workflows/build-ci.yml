@@ -90,9 +90,9 @@ jobs:
       - name: "Login to ACR"
         uses: docker/login-action@v3
         with:
-          registry: "crwccgdevuks.azurecr.io"
-          username: ${{ secrets.AZURE_CLIENT_ID }}
-          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+          registry: ${{ vars.AZURE_ACR_REGISTRY_URL }}
+          username: ${{ secrets.AZURE_ACR_CLIENT_ID }}
+          password: ${{ secrets.AZURE_ACR_CLIENT_SECRET }}
 
       - name: "Build and Push to ACR"
         uses: docker/build-push-action@v6
