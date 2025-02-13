@@ -98,7 +98,7 @@ jobs:
           context: "./src/WCCG.PAS.Referrals.API"
           push: true
           tags: "pas/referrals.api:latest"
-          file: "Dockerfile"
+          file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
 
 #      - name: "Build docker image"
 #        working-directory: "./src/WCCG.PAS.Referrals.API"
