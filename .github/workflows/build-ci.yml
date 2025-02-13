@@ -12,7 +12,7 @@ jobs:
 
     env:
       BUILD_CONFIGURATION: "Release"
-      IMAGE_TAG: "pas/referrals.api"
+      IMAGE_NAME: "pas/referrals.api"
 
     steps:
       - name: "Checkout branch"
@@ -103,8 +103,8 @@ jobs:
           context: "./src/WCCG.PAS.Referrals.API"
           file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
           tags: |
-            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_TAG }}:latest"
-            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_TAG }}:${{ github.sha }}"
+            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
+            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
       - name: Output image digest
         run: |

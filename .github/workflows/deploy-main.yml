@@ -1,0 +1,32 @@
+﻿name: deploy-main.yml
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: "pas/referrals.api"
+      RESOURCE_GROUP: "rg-wccg-app-dev-uks"
+      CONTAINER_APP_ENVIRONMENT: "cae-wccg-dev-uks"
+      CONTAINER_APP_NAME: "pas-referrals-api"
+
+    steps:
+      - name: "Log in to Azure"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: "Deploy Container App"
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          imageToDeploy: "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          containerAppEnvironment: ${{ env.CONTAINER_APP_ENVIRONMENT }}
