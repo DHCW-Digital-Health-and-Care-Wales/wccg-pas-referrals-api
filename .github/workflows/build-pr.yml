@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BUILD_CONFIGURATION: Release
+      BUILD_CONFIGURATION: "Release"
 
     steps:
       - name: "Checkout branch"
