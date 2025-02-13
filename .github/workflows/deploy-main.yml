@@ -11,6 +11,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: "pas/referrals.api"
+      RESOURCE_GROUP: "rg-wccg-app-dev-uks"
+      CONTAINER_APP_ENVIRONMENT: "cae-wccg-dev-uks"
+      CONTAINER_APP_NAME: "pas-referrals-api"
+
     steps:
       - name: "Log in to Azure"
         uses: azure/login@v1
@@ -21,7 +27,7 @@ jobs:
         uses: azure/container-apps-deploy-action@v1
         with:
           imageToDeploy: "${{ vars.AZURE_DEV_ACR_REGISTRY_URL }}/${{ vars.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
-          containerAppName: "${{ vars.CONTAINER_APP_NAME }}"
-          resourceGroup: "${{ vars.RESOURCE_GROUP }}"
-          containerAppEnvironment: "${{ vars.CONTAINER_APP_ENVIRONMENT }}"
+          containerAppName: "${{ env.CONTAINER_APP_NAME }}"
+          resourceGroup: "${{ env.RESOURCE_GROUP }}"
+          containerAppEnvironment: "${{ env.CONTAINER_APP_ENVIRONMENT }}"
           runtimeStack: "dotnetcore:8.0"
