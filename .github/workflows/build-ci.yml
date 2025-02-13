@@ -1,13 +1,28 @@
 name: build-ci.yml
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
-  call-common-workflow:
-    uses: "./.github/workflows/build-common.yml"
-
-  additional-steps:
-    needs: call-common-workflow
+  build-and-deploy:
     runs-on: ubuntu-latest
+
+    env:
+      BUILD_CONFIGURATION: Release
+
+    steps:
+      - name: "Log in to Azure"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Files
+        run: |
+          pwd
+          ls -al ${{ github.workspace }}
+
+      - name: "Build and push docker image"
+        working-directory: "./src/WCCG.PAS.Referrals.API"
+        run: |
+          docker build -t pas/referrals.api:latest .
