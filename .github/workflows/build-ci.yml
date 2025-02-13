@@ -95,11 +95,9 @@ jobs:
       - name: "Build and Push to ACR"
         uses: docker/build-push-action@v6
         with:
-          context: "${{ github.workspace }}/src/WCCG.PAS.Referrals.API"
+          context: "src/WCCG.PAS.Referrals.API"
           push: true
-          no-cache: true
           tags: "pas/referrals.api:latest"
-          file: "./Dockerfile"
 
 #      - name: "Build docker image"
 #        working-directory: "./src/WCCG.PAS.Referrals.API"
