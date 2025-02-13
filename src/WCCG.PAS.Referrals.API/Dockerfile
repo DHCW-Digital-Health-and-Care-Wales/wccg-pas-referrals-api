@@ -7,15 +7,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/WCCG.PAS.Referrals.API/WCCG.PAS.Referrals.API.csproj", "WCCG.PAS.Referrals.API/"]
-RUN dotnet restore "WCCG.PAS.Referrals.API/WCCG.PAS.Referrals.API.csproj"
-COPY . .
+COPY ["./WCCG.PAS.Referrals.API.csproj", "WCCG.PAS.Referrals.API/"]
+RUN dotnet restore "./WCCG.PAS.Referrals.API/WCCG.PAS.Referrals.API.csproj"
+COPY . "./WCCG.PAS.Referrals.API"
 WORKDIR "/src/WCCG.PAS.Referrals.API"
-RUN dotnet build "WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./WCCG.PAS.Referrals.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

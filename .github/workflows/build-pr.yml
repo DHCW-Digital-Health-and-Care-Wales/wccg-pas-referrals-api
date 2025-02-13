@@ -1,16 +1,15 @@
-name: build-ci.yml
+name: build-pr.yml
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
-    runs-on: "ubuntu-latest"
+  build-and-test:
+    runs-on: ubuntu-latest
 
     env:
-      BUILD_CONFIGURATION: "Release"
-      IMAGE_NAME: "pas/referrals.api"
+      BUILD_CONFIGURATION: Release
 
     steps:
       - name: "Checkout branch"
@@ -38,7 +37,7 @@ jobs:
           reporttypes: "Cobertura"
           verbosity: "Info"
           title: "Code Coverage"
-          tag: "${{ github.run_number }}_${{ github.run_id }}" # Optional tag or build version.
+          tag: "${{ github.run_number }}_${{ github.run_id }}"
           toolpath: "reportgeneratortool"
 
       - name: "Upload Combined Coverage XML"
@@ -61,6 +60,13 @@ jobs:
           output: both
           thresholds: "60 80"
 
+      - name: "Add Coverage PR Comment"
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
       - name: "Upload Test Result Files"
         uses: actions/upload-artifact@v4
         with:
@@ -73,25 +79,3 @@ jobs:
         if: always()
         with:
           trx_files: "${{ github.workspace }}/**/*.trx"
-
-      - name: "Login to ACR"
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}
-          username: ${{ secrets.AZURE_DEV_ACR_CLIENT_ID }}
-          password: ${{ secrets.AZURE_DEV_ACR_CLIENT_SECRET }}
-
-      - name: "Build and Push to ACR"
-        uses: docker/build-push-action@v6
-        id: docker_build
-        with:
-          push: true
-          context: "./src/WCCG.PAS.Referrals.API"
-          file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
-          tags: |
-            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest"
-            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-
-      - name: Output image digest
-        run: |
-          echo "Image digest: ${{ steps.docker_build.outputs.digest }}"

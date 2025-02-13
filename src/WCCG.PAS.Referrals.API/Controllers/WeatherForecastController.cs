@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using WCCG.PAS.Referrals.API.Extensions;
 using WCCG.PAS.Referrals.API.Models;
@@ -6,6 +7,7 @@ namespace WCCG.PAS.Referrals.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[ExcludeFromCodeCoverage]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries =
