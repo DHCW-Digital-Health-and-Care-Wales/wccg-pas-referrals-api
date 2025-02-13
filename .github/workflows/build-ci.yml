@@ -97,6 +97,7 @@ jobs:
         with:
           context: .
           push: true
+          no-cache: true
           tags: "pas/referrals.api:latest"
           file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
 
