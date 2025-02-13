@@ -24,3 +24,4 @@ jobs:
           containerAppName: "${{ vars.CONTAINER_APP_NAME }}"
           resourceGroup: "${{ vars.RESOURCE_GROUP }}"
           containerAppEnvironment: "${{ vars.CONTAINER_APP_ENVIRONMENT }}"
+          runtimeStack: "dotnetcore:8.0"
