@@ -8,10 +8,11 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
 
     env:
-      BUILD_CONFIGURATION: Release
+      BUILD_CONFIGURATION: "Release"
+      IMAGE_TAG: "pas/referrals.api"
 
     steps:
       - name: "Checkout branch"
@@ -96,11 +97,18 @@ jobs:
 
       - name: "Build and Push to ACR"
         uses: docker/build-push-action@v6
+        id: docker_build
         with:
-          context: "./src/WCCG.PAS.Referrals.API"
           push: true
-          tags: "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/pas/referrals.api:latest"
+          context: "./src/WCCG.PAS.Referrals.API"
           file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
+          tags: |
+            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_TAG }}:latest"
+            "${{ secrets.AZURE_DEV_ACR_REGISTRY_URL }}/${{ env.IMAGE_TAG }}:${{ github.sha }}"
+
+      - name: Output image digest
+        run: |
+          echo "Image digest: ${{ steps.docker_build.outputs.digest }}"
 
 #      - name: "Build docker image"
 #        working-directory: "./src/WCCG.PAS.Referrals.API"
