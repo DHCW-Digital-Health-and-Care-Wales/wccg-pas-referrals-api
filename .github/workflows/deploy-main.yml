@@ -21,7 +21,7 @@ jobs:
         uses: azure/container-apps-deploy-action@v1
         with:
           imageToDeploy: "${{ vars.AZURE_DEV_ACR_REGISTRY_URL }}/${{ vars.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
-          containerAppName: ${{ vars.CONTAINER_APP_NAME }}
-          resourceGroup: ${{ vars.RESOURCE_GROUP }}
-          containerAppEnvironment: ${{ vars.CONTAINER_APP_ENVIRONMENT }}
+          containerAppName: "${{ vars.CONTAINER_APP_NAME }}"
+          resourceGroup: "${{ vars.RESOURCE_GROUP }}"
+          containerAppEnvironment: "${{ vars.CONTAINER_APP_ENVIRONMENT }}"
           runtimeStack: "dotnetcore:8.0"
