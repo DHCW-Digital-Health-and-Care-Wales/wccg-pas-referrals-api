@@ -82,22 +82,25 @@ jobs:
 #        with:
 #          trx_files: "${{ github.workspace }}/**/*.trx"
 
-      - name: "Log in to Azure"
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+#      - name: "Log in to Azure"
+#        uses: azure/login@v1
+#        with:
+#          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: "Files"
-        run: |
-          pwd
-          ls -al ${{ github.workspace }}
+      - name: "Login to ACR"
+        uses: docker/login-action@v3
+        with:
+          registry: "crwccgdevuks.azurecr.io"
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: "Build and Push to ACR"
         uses: docker/build-push-action@v6
         with:
           context: "./src/WCCG.PAS.Referrals.API"
           push: true
-          tags: "crwccgdevuks.azurecr.io/pas/referrals.api:latest"
+#          tags: "crwccgdevuks.azurecr.io/pas/referrals.api:latest"
+          tags: "pas/referrals.api:latest"
           file: "./src/WCCG.PAS.Referrals.API/Dockerfile"
 
 #      - name: "Build docker image"
