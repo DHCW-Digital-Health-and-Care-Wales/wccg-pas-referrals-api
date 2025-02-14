@@ -8,9 +8,19 @@ using WCCG.PAS.Referrals.UI.Services;
 
 namespace WCCG.PAS.Referrals.UI.Pages;
 
-public class ItemEditorModel
-    (IReferralService referralService, IValidator<ReferralDbModel> validator, ILogger<ItemEditorModel> logger) : PageModel
+public class ItemEditorModel : PageModel
 {
+    private readonly IReferralService _referralService;
+    private readonly IValidator<ReferralDbModel> _validator;
+    private readonly ILogger<ItemEditorModel> _logger;
+
+    public ItemEditorModel(IReferralService referralService, IValidator<ReferralDbModel> validator, ILogger<ItemEditorModel> logger)
+    {
+        _referralService = referralService;
+        _validator = validator;
+        _logger = logger;
+    }
+
     [BindProperty]
     public required string? ReferralJson { get; set; }
 
@@ -21,7 +31,7 @@ public class ItemEditorModel
 
     public async Task OnGet(string id)
     {
-        var referral = await referralService.GetByIdAsync(id);
+        var referral = await _referralService.GetByIdAsync(id);
 
         ReferralJson = JsonSerializer.Serialize(referral, _jsonOptions);
     }
@@ -57,7 +67,7 @@ public class ItemEditorModel
         }
         catch (JsonException ex)
         {
-            logger.FailedToDeserializeReferral(ex);
+            _logger.FailedToDeserializeReferral(ex);
             HandleErrors(ex.Message);
         }
 
@@ -66,7 +76,7 @@ public class ItemEditorModel
 
     private async Task<bool> IsReferralValidAsync(ReferralDbModel referral)
     {
-        var validationResult = await validator.ValidateAsync(referral);
+        var validationResult = await _validator.ValidateAsync(referral);
 
         if (validationResult.IsValid)
         {
@@ -74,7 +84,7 @@ public class ItemEditorModel
         }
 
         var errors = validationResult.Errors.Select(x => x.ErrorMessage).ToArray();
-        logger.ReferralValidationFailed(string.Join(';', errors));
+        _logger.ReferralValidationFailed(string.Join(';', errors));
         HandleErrors(errors);
 
         return false;
@@ -84,12 +94,12 @@ public class ItemEditorModel
     {
         try
         {
-            await referralService.UpsertAsync(referral);
+            await _referralService.UpsertAsync(referral);
             IsSaved = true;
         }
         catch (Exception ex)
         {
-            logger.FailedToUpsertReferral(ex);
+            _logger.FailedToUpsertReferral(ex);
             HandleErrors(ex.Message);
         }
     }
