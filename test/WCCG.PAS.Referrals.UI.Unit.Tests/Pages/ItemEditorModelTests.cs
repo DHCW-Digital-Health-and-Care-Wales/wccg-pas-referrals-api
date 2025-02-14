@@ -3,6 +3,8 @@ using AutoFixture;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WCCG.PAS.Referrals.UI.DbModels;
@@ -55,11 +57,12 @@ public class ItemEditorModelTests
     public async Task OnPostShouldCallUpsertAsyncWhenDeserializedAndValidatedSuccessfully()
     {
         //Act
-        await _sut.OnPost();
+        var result = await _sut.OnPost();
 
         //Assert
-        _sut.IsSaved.Should().BeTrue();
+        result.Should().BeOfType<PageResult>();
 
+        _sut.IsSaved.Should().BeTrue();
         _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<ReferralDbModel>(r => r.IsEquivalentTo(_referralDbModel))));
     }
 
@@ -74,9 +77,11 @@ public class ItemEditorModelTests
             .ReturnsAsync(_referralDbModel);
 
         //Act
-        await _sut.OnPost();
+        var result = await _sut.OnPost();
 
         //Assert
+        result.Should().BeOfType<PageResult>();
+
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().NotBeEmpty();
 
@@ -96,9 +101,11 @@ public class ItemEditorModelTests
             .ReturnsAsync(validationResult);
 
         //Act
-        await _sut.OnPost();
+        var result = await _sut.OnPost();
 
         //Assert
+        result.Should().BeOfType<PageResult>();
+
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().Be(expectedErrorMessage);
 
@@ -115,12 +122,27 @@ public class ItemEditorModelTests
             .ThrowsAsync(new ArgumentException(errorMessage));
 
         //Act
-        await _sut.OnPost();
+        var result = await _sut.OnPost();
 
         //Assert
+        result.Should().BeOfType<PageResult>();
+
         _sut.IsSaved.Should().BeFalse();
         _sut.ErrorMessage.Should().Be(errorMessage);
 
         _fixture.Mock<IReferralService>().Verify(s => s.UpsertAsync(It.Is<ReferralDbModel>(r => r.IsEquivalentTo(_referralDbModel))));
+    }
+
+    [Fact]
+    public async Task OnPostShouldReturnBadRequestWhenReferralJsonIsNull()
+    {
+        //Arrange
+        _sut.ReferralJson = null;
+
+        //Act
+        var result = await _sut.OnPost();
+
+        //Assert
+        result.Should().BeOfType<BadRequestResult>();
     }
 }
