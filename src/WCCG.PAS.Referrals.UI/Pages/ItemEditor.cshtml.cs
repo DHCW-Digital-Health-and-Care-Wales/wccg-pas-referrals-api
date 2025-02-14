@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using WCCG.PAS.Referrals.UI.DbModels;
+using WCCG.PAS.Referrals.UI.Extensions;
 using WCCG.PAS.Referrals.UI.Services;
 
 namespace WCCG.PAS.Referrals.UI.Pages;
@@ -11,9 +12,8 @@ public class ItemEditorModel
     (IReferralService referralService, IValidator<ReferralDbModel> validator, ILogger<ItemEditorModel> logger) : PageModel
 {
     [BindProperty]
-    public required string ReferralJson { get; set; }
+    public required string? ReferralJson { get; set; }
 
-    public required string ReferralId { get; set; }
     public bool? IsSaved { get; set; }
     public string? ErrorMessage { get; set; }
 
@@ -23,36 +23,41 @@ public class ItemEditorModel
     {
         var referral = await referralService.GetByIdAsync(id);
 
-        ReferralId = referral.Id!;
         ReferralJson = JsonSerializer.Serialize(referral, _jsonOptions);
     }
 
-    public async Task OnPost()
+    public async Task<IActionResult> OnPost()
     {
+        if (ReferralJson is null)
+        {
+            return BadRequest();
+        }
+
         var referral = DeserializeReferral();
         if (referral is null)
         {
-            return;
+            return Page();
         }
 
         var isValid = await IsReferralValidAsync(referral);
         if (!isValid)
         {
-            return;
+            return Page();
         }
 
         await UpsertReferralAsync(referral);
+        return Page();
     }
 
     private ReferralDbModel? DeserializeReferral()
     {
         try
         {
-            return JsonSerializer.Deserialize<ReferralDbModel>(ReferralJson)!;
+            return JsonSerializer.Deserialize<ReferralDbModel>(ReferralJson!);
         }
         catch (JsonException ex)
         {
-            logger.LogError(ex.Message);
+            logger.FailedToDeserializeReferral(ex);
             HandleErrors(ex.Message);
         }
 
@@ -69,7 +74,7 @@ public class ItemEditorModel
         }
 
         var errors = validationResult.Errors.Select(x => x.ErrorMessage).ToArray();
-        logger.LogError($"Validation errors: {string.Join(';', errors)}");
+        logger.ReferralValidationFailed(string.Join(';', errors));
         HandleErrors(errors);
 
         return false;
@@ -84,7 +89,7 @@ public class ItemEditorModel
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.Message);
+            logger.FailedToUpsertReferral(ex);
             HandleErrors(ex.Message);
         }
     }

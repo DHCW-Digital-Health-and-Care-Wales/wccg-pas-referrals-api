@@ -30,7 +30,7 @@ public class ItemEditorModelTests
             _fixture.Mock<IValidator<ReferralDbModel>>().Object,
             _fixture.Mock<ILogger<ItemEditorModel>>().Object)
         {
-            ReferralJson = JsonSerializer.Serialize(_referralDbModel, _jsonOptions), ReferralId = _referralDbModel.Id!
+            ReferralJson = JsonSerializer.Serialize(_referralDbModel, _jsonOptions),
         };
     }
 
@@ -46,7 +46,6 @@ public class ItemEditorModelTests
         await _sut.OnGet(_referralDbModel.Id!);
 
         //Assert
-        _sut.ReferralId.Should().Be(_referralDbModel.Id);
         _sut.ReferralJson.Should().Be(expectedJson);
 
         _fixture.Mock<IReferralService>().Verify(r => r.GetByIdAsync(_referralDbModel.Id!));
