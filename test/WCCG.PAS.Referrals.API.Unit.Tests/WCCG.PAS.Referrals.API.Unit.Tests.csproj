@@ -35,4 +35,13 @@
     <ProjectReference Include="..\..\src\WCCG.PAS.Referrals.API\WCCG.PAS.Referrals.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\example-bundle-adjusted.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\example-bundle.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
