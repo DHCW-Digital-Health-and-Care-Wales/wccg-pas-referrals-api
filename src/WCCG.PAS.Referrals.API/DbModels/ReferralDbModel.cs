@@ -4,7 +4,7 @@ namespace WCCG.PAS.Referrals.API.DbModels;
 
 public class ReferralDbModel
 {
-    [JsonProperty("iD")]
+    [JsonProperty("id")]
     public required string Id { get; set; }
 
     [JsonProperty("caseno")]
