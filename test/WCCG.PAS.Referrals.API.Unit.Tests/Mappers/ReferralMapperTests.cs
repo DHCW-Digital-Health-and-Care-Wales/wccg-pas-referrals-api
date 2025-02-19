@@ -19,7 +19,7 @@ public class ReferralMapperTests
     public ReferralMapperTests()
     {
         _sut = _fixture.CreateWithFrozen<ReferralMapper>();
-        var bundleJson = File.ReadAllText(@"TestData\example-bundle.json");
+        var bundleJson = File.ReadAllText("TestData/example-bundle.json");
 
         var options = new JsonSerializerOptions()
             .ForFhir(ModelInfo.ModelInspector)
