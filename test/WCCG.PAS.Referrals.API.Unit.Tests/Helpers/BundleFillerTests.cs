@@ -28,10 +28,10 @@ public class BundleFillerTests
     public void AdjustBundleWithDbModelDataShouldSetNewValues()
     {
         //Arrange
-        var originalBundleJson = File.ReadAllText(@"..\..\..\TestData\example-bundle.json");
+        var originalBundleJson = File.ReadAllText(@"TestData\example-bundle.json");
         var originalBundle = JsonSerializer.Deserialize<Bundle>(originalBundleJson, _options);
 
-        var expectedBundleJson = File.ReadAllText(@"..\..\..\TestData\example-bundle-adjusted.json");
+        var expectedBundleJson = File.ReadAllText(@"TestData\example-bundle-adjusted.json");
         var expectedBundle = JsonSerializer.Deserialize<Bundle>(expectedBundleJson, _options);
 
         var dbModel = _fixture.Build<ReferralDbModel>()
