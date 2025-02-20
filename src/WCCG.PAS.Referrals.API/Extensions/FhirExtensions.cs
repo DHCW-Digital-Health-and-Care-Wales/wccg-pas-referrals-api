@@ -40,7 +40,7 @@ public static class FhirExtensions
         });
     }
 
-    public static T? Check<T>(this T? resource, Func<T?, string?> conditionProp, string conditionValue) where T : Base
+    public static T? CheckPropertyValue<T>(this T? resource, Func<T?, string?> conditionProp, string conditionValue) where T : Base
     {
         var propertyToCheck = conditionProp(resource);
 
@@ -51,7 +51,7 @@ public static class FhirExtensions
                 : null;
     }
 
-    public static string? StringValueByElementName(this IEnumerable<ElementValue> values, string elementName)
+    public static string? GetStringValueByElementName(this IEnumerable<ElementValue> values, string elementName)
     {
         var element = values.FirstOrDefault(x => x.ElementName.Equals(elementName, StringComparison.OrdinalIgnoreCase));
 
@@ -60,7 +60,7 @@ public static class FhirExtensions
             : null;
     }
 
-    public static TOut? ResourceByType<TOut>(this Bundle bundle) where TOut : Base
+    public static TOut? GetResourceByType<TOut>(this Bundle bundle) where TOut : Base
     {
         var res = bundle.Children.OfType<Bundle.EntryComponent>()
             .FirstOrDefault(x => x.Resource is not null
@@ -69,7 +69,7 @@ public static class FhirExtensions
         return res?.Resource as TOut;
     }
 
-    public static Resource? ResourceByUrl(this Bundle bundle, string? url)
+    public static Resource? GetResourceByUrl(this Bundle bundle, string? url)
     {
         var entryComponent = bundle.Children.OfType<Bundle.EntryComponent>()
             .FirstOrDefault(x => x.FullUrl is not null
@@ -78,9 +78,9 @@ public static class FhirExtensions
         return entryComponent?.Resource;
     }
 
-    public static Resource? ResourceByIdFromList(this IEnumerable<ResourceReference> references, Bundle? bundle, string id)
+    public static Resource? GetResourceByIdFromList(this IEnumerable<ResourceReference> references, Bundle? bundle, string id)
     {
-        return references.Select(reference => bundle?.ResourceByUrl(reference.Reference))
+        return references.Select(reference => bundle?.GetResourceByUrl(reference.Reference))
             .FirstOrDefault(resource => resource?.Id is not null
                                         && resource.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
     }

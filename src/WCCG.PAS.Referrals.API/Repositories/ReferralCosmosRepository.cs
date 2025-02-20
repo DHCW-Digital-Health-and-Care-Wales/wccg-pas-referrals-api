@@ -18,6 +18,6 @@ public class ReferralCosmosRepository : IReferralCosmosRepository
 
     public async Task CreateReferralAsync(ReferralDbModel referralDbModel)
     {
-        await _container.UpsertItemAsync(referralDbModel);
+        await _container.CreateItemAsync(referralDbModel);
     }
 }

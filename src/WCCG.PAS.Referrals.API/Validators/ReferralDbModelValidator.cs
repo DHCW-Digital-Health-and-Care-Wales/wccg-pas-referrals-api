@@ -11,10 +11,6 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
         ClassLevelCascadeMode = CascadeMode.Continue;
         RuleLevelCascadeMode = CascadeMode.Stop;
 
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .Must(BeValidGuid);
-
         RuleFor(x => x.CaseNumber)
             .NotEmpty()
             .Must(BeValidGuid);

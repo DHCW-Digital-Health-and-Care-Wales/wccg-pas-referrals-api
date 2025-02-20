@@ -22,9 +22,9 @@ public class BundleFiller : IBundleFiller
 
     private void SetCaseNumber()
     {
-        var serviceRequest = _bundle?.ResourceByType<ServiceRequest>()!;
+        var serviceRequest = _bundle?.GetResourceByType<ServiceRequest>()!;
         var patientReference = serviceRequest.Subject.Reference;
-        var patient = _bundle?.ResourceByUrl(patientReference) as Patient;
+        var patient = _bundle?.GetResourceByUrl(patientReference) as Patient;
 
         patient!.Identifier
             .SelectWithCondition(x => x.System, NhsFhirConstants.PasIdentifierSystem)
@@ -33,20 +33,20 @@ public class BundleFiller : IBundleFiller
 
     private void SetBookingDate()
     {
-        var serviceRequest = _bundle?.ResourceByType<ServiceRequest>()!;
+        var serviceRequest = _bundle?.GetResourceByType<ServiceRequest>()!;
 
         var encounterReference = serviceRequest.Encounter?.Reference;
-        var encounter = _bundle?.ResourceByUrl(encounterReference) as Encounter;
+        var encounter = _bundle?.GetResourceByUrl(encounterReference) as Encounter;
 
         var appointmentReference = encounter!.Appointment.FirstOrDefault()!.Reference;
-        var appointment = _bundle?.ResourceByUrl(appointmentReference) as Appointment;
+        var appointment = _bundle?.GetResourceByUrl(appointmentReference) as Appointment;
 
         appointment!.Created = _dbModel!.BookingDate;
     }
 
     private void SetReferralId()
     {
-        var serviceRequest = _bundle?.ResourceByType<ServiceRequest>()!;
+        var serviceRequest = _bundle?.GetResourceByType<ServiceRequest>()!;
 
         serviceRequest.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.ReferralIdSystem)
             !.Value = _dbModel!.ReferralId;

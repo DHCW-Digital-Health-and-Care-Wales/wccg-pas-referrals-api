@@ -24,39 +24,6 @@ public class ReferralDbModelValidatorTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("123")]
-    public void ShouldContainErrorWhenIdInvalid(string? id)
-    {
-        //Arrange
-        var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.Id, id)
-            .Create();
-
-        //Act
-        var validationResult = _sut.TestValidate(dbModel);
-
-        //Assert
-        validationResult.ShouldHaveValidationErrorFor(x => x.Id);
-    }
-
-    [Fact]
-    public void ShouldNotContainErrorWhenIdValid()
-    {
-        //Arrange
-        var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.Id, Guid.NewGuid().ToString)
-            .Create();
-
-        //Act
-        var validationResult = _sut.TestValidate(dbModel);
-
-        //Assert
-        validationResult.ShouldNotHaveValidationErrorFor(x => x.Id);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("123")]
     public void ShouldContainErrorWhenCaseNumberInvalid(string? caseNumber)
     {
         //Arrange

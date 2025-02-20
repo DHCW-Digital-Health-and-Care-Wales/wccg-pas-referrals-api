@@ -17,13 +17,13 @@ namespace WCCG.PAS.Referrals.API.Extensions;
 [ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
-    public static void AddApplicationInsights(this IServiceCollection services, IHostEnvironment environment, string clientId)
+    public static void AddApplicationInsights(this IServiceCollection services, bool isDevelopmentEnvironment, string clientId)
     {
         services.AddApplicationInsightsTelemetry();
-
+        var sp = services.BuildServiceProvider();
         services.Configure<TelemetryConfiguration>(config =>
         {
-            if (environment.IsDevelopment())
+            if (isDevelopmentEnvironment)
             {
                 config.SetAzureTokenCredential(new AzureCliCredential());
                 return;
@@ -33,18 +33,18 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static void AddCosmosClient(this IServiceCollection services, IHostEnvironment environment)
+    public static void AddCosmosClient(this IServiceCollection services, bool isDevelopmentEnvironment)
     {
         var cosmosClientOptions = new CosmosClientOptions
         {
             SerializerOptions = new CosmosSerializationOptions { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase }
         };
 
-        if (environment.IsDevelopment())
+        if (isDevelopmentEnvironment)
         {
             services.AddSingleton(provider =>
             {
-                var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
+                var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
                 return new CosmosClient(cosmosConfig?.DatabaseEndpoint, new AzureCliCredential(), cosmosClientOptions);
             });
             return;
@@ -52,8 +52,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(provider =>
         {
-            var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
-            var managedIdentityConfig = provider.GetService<IOptions<ManagedIdentityConfig>>()?.Value;
+            var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
+            var managedIdentityConfig = provider.GetRequiredService<IOptions<ManagedIdentityConfig>>().Value;
 
             return new CosmosClient(
                 cosmosConfig?.DatabaseEndpoint,
@@ -64,10 +64,10 @@ public static class ServiceCollectionExtensions
 
     public static void AddCosmosRepositories(this IServiceCollection services)
     {
-        services.AddSingleton<IReferralCosmosRepository>(provider =>
+        services.AddScoped<IReferralCosmosRepository>(provider =>
         {
-            var cosmosConfig = provider.GetService<IOptions<CosmosConfig>>()?.Value;
-            return new ReferralCosmosRepository(provider.GetService<CosmosClient>()!, cosmosConfig!);
+            var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
+            return new ReferralCosmosRepository(provider.GetRequiredService<CosmosClient>(), cosmosConfig);
         });
     }
 
@@ -75,7 +75,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IReferralMapper, ReferralMapper>();
         services.AddScoped<IReferralService, ReferralService>();
-        services.AddScoped<IFhirSerializer, FhirJsonSerializer>();
         services.AddScoped<IBundleFiller, BundleFiller>();
     }
 

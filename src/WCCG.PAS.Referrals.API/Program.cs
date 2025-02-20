@@ -1,25 +1,35 @@
+using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
+using WCCG.PAS.Referrals.API.Configuration.OptionValidators;
+using WCCG.PAS.Referrals.API.Converters;
 using WCCG.PAS.Referrals.API.Extensions;
 using WCCG.PAS.Referrals.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//IOptions
-builder.Services.Configure<CosmosConfig>(builder.Configuration.GetSection("Cosmos"));
-builder.Services.Configure<ManagedIdentityConfig>(builder.Configuration.GetSection("ManagedIdentity"));
+//CosmosConfig
+builder.Services.Configure<CosmosConfig>(builder.Configuration.GetSection(CosmosConfig.SectionName));
+builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConfigOptions>();
 
-builder.Services.AddControllers();
+//ManagedIdentityConfig
+builder.Services.Configure<ManagedIdentityConfig>(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
+builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new FhirBundleConverter()); });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var clientId = builder.Configuration.GetValue<string>("ManagedIdentity:ClientId")!;
-builder.Services.AddApplicationInsights(builder.Environment, clientId);
+builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), clientId);
 
-builder.Services.AddCosmosClient(builder.Environment);
+builder.Services.AddCosmosClient(builder.Environment.IsDevelopment());
 builder.Services.AddCosmosRepositories();
 
 builder.Services.AddServices();
 builder.Services.AddValidators();
+
 
 var app = builder.Build();
 
