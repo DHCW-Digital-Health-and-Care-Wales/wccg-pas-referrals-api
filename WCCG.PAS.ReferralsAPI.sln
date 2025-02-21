@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCCG.PAS.Referrals.API", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCCG.PAS.Referrals.API.Unit.Tests", "test\WCCG.PAS.Referrals.API.Unit.Tests\WCCG.PAS.Referrals.API.Unit.Tests.csproj", "{30A34BA8-C41C-4870-B930-8FD69E647247}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WCCG.PAS.Referrals.API.Integration.Tests", "test\WCCG.PAS.Referrals.API.Integration.Tests\WCCG.PAS.Referrals.API.Integration.Tests.csproj", "{D58DFE10-DC30-4B8B-B658-BE3F486EF967}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,12 @@ Global
 		{30A34BA8-C41C-4870-B930-8FD69E647247}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30A34BA8-C41C-4870-B930-8FD69E647247}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30A34BA8-C41C-4870-B930-8FD69E647247}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D58DFE10-DC30-4B8B-B658-BE3F486EF967}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D58DFE10-DC30-4B8B-B658-BE3F486EF967}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D58DFE10-DC30-4B8B-B658-BE3F486EF967}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D58DFE10-DC30-4B8B-B658-BE3F486EF967}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

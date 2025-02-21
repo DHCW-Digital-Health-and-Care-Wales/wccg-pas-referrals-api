@@ -21,8 +21,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var clientId = builder.Configuration.GetValue<string>("ManagedIdentity:ClientId")!;
-builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), clientId);
+builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), builder.Configuration);
 
 builder.Services.AddCosmosClient(builder.Environment.IsDevelopment());
 builder.Services.AddCosmosRepositories();

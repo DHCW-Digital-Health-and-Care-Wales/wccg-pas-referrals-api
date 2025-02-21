@@ -6,7 +6,6 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.DbModels;
-using WCCG.PAS.Referrals.API.Helpers;
 using WCCG.PAS.Referrals.API.Mappers;
 using WCCG.PAS.Referrals.API.Repositories;
 using WCCG.PAS.Referrals.API.Services;
@@ -17,10 +16,9 @@ namespace WCCG.PAS.Referrals.API.Extensions;
 [ExcludeFromCodeCoverage]
 public static class ServiceCollectionExtensions
 {
-    public static void AddApplicationInsights(this IServiceCollection services, bool isDevelopmentEnvironment, string clientId)
+    public static void AddApplicationInsights(this IServiceCollection services, bool isDevelopmentEnvironment, IConfiguration configuration)
     {
         services.AddApplicationInsightsTelemetry();
-        var sp = services.BuildServiceProvider();
         services.Configure<TelemetryConfiguration>(config =>
         {
             if (isDevelopmentEnvironment)
@@ -29,6 +27,8 @@ public static class ServiceCollectionExtensions
                 return;
             }
 
+            var clientId = configuration.GetRequiredSection(ManagedIdentityConfig.SectionName)
+                .GetValue<string>(nameof(ManagedIdentityConfig.ClientId));
             config.SetAzureTokenCredential(new ManagedIdentityCredential(clientId));
         });
     }
@@ -45,7 +45,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton(provider =>
             {
                 var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
-                return new CosmosClient(cosmosConfig?.DatabaseEndpoint, new AzureCliCredential(), cosmosClientOptions);
+                return new CosmosClient(cosmosConfig.DatabaseEndpoint, new AzureCliCredential(), cosmosClientOptions);
             });
             return;
         }
@@ -56,8 +56,8 @@ public static class ServiceCollectionExtensions
             var managedIdentityConfig = provider.GetRequiredService<IOptions<ManagedIdentityConfig>>().Value;
 
             return new CosmosClient(
-                cosmosConfig?.DatabaseEndpoint,
-                new ManagedIdentityCredential(managedIdentityConfig?.ClientId),
+                cosmosConfig.DatabaseEndpoint,
+                new ManagedIdentityCredential(managedIdentityConfig.ClientId),
                 cosmosClientOptions);
         });
     }
@@ -75,7 +75,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IReferralMapper, ReferralMapper>();
         services.AddScoped<IReferralService, ReferralService>();
-        services.AddScoped<IBundleFiller, BundleFiller>();
     }
 
     public static void AddValidators(this IServiceCollection services)

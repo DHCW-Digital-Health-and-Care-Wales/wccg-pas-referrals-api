@@ -21,10 +21,10 @@ public class ReferralsController : ControllerBase
 
     [HttpPost("createReferral")]
     [SwaggerOperation(Summary = "Create referral")]
-    [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/json"])]
+    [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/fhir+json"])]
     [SwaggerResponse(StatusCodes.Status400BadRequest, ContentTypes = ["text/plain", "application/json"])]
     [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateReferral([SwaggerRequestBody(Required = true)] Bundle bundle)
+    public async Task<IActionResult> CreateReferral([SwaggerRequestBody(Required = true)] [FromBody] Bundle bundle)
     {
         _logger.CalledMethod(nameof(CreateReferral));
 

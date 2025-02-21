@@ -63,21 +63,21 @@ public class ReferralMapper : IReferralMapper
     private string? GetReferrer()
     {
         var practitionerReference = ServiceRequest?.Requester?.Reference;
-        var practitioner = _bundle?.GetResourceByUrl(practitionerReference) as Practitioner;
+        var practitioner =
+            _bundle?.GetResourceByUrlWithCondition<Practitioner>(practitionerReference, p => p.Id, NhsFhirConstants.RequestingPractitioner);
 
-        return practitioner.CheckPropertyValue(x => x?.Id, NhsFhirConstants.RequestingPractitioner)
-            ?.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.GmcNumberSystem)
+        return practitioner?.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.GmcNumberSystem)
             ?.Value;
     }
 
     private string? GetReferrerAddress()
     {
         var appointmentReference = EncounterFromServiceRequest?.Appointment?.FirstOrDefault()?.Reference;
-        var appointment = _bundle?.GetResourceByUrl(appointmentReference) as Appointment;
+        var appointment = _bundle?.GetResourceByUrl<Appointment>(appointmentReference);
 
         var organisationReference = appointment?.Extension?.SelectWithCondition(x => x.Url, NhsFhirConstants.BookingOrganisation)
             ?.Value.NamedChildren?.GetStringValueByElementName(NhsFhirConstants.ReferenceElementName);
-        var organisation = _bundle?.GetResourceByUrl(organisationReference) as Organization;
+        var organisation = _bundle?.GetResourceByUrl<Organization>(organisationReference);
 
         return organisation?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.OdcOrganizationCodeSystem)
             ?.Value;
@@ -85,16 +85,19 @@ public class ReferralMapper : IReferralMapper
 
     private string? GetPatientGpCode()
     {
-        return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithCondition(x => x.Type, NhsFhirConstants.PractitionerType)
-            ?.Identifier?.CheckPropertyValue(x => x?.System, NhsFhirConstants.GmcNumberSystem)
-            ?.Value;
+        return PatientFromServiceRequest?.GeneralPractitioner
+            ?.SelectWithConditions([
+                (x => x.Type, NhsFhirConstants.PractitionerType),
+                (x => x.Identifier?.System, NhsFhirConstants.GmcNumberSystem)
+            ])?.Identifier.Value;
     }
 
     private string? GetPatientGpPracticeCode()
     {
-        return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithCondition(x => x.Type, NhsFhirConstants.OrganizationType)
-            ?.Identifier?.CheckPropertyValue(x => x?.System, NhsFhirConstants.OdcOrganizationCodeSystem)
-            ?.Value;
+        return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithConditions([
+            (x => x.Type, NhsFhirConstants.OrganizationType),
+            (x => x.Identifier?.System, NhsFhirConstants.OdcOrganizationCodeSystem),
+        ])?.Identifier.Value;
     }
 
     private string? GetPostcode()
@@ -104,7 +107,7 @@ public class ReferralMapper : IReferralMapper
 
     private string? GetPatientHealthBoardAreaCode()
     {
-        var organization = ServiceRequest?.Performer?.GetResourceByIdFromList(_bundle, NhsFhirConstants.DhaCodeId) as Organization;
+        var organization = ServiceRequest?.Performer?.GetResourceByIdFromList<Organization>(_bundle, NhsFhirConstants.DhaCodeId);
 
         return organization?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.OdcOrganizationCodeSystem)
             ?.Value;
@@ -120,7 +123,7 @@ public class ReferralMapper : IReferralMapper
     private string? GetReferralAssignedConsultant()
     {
         var practitioner =
-            ServiceRequest?.Performer?.GetResourceByIdFromList(_bundle, NhsFhirConstants.ReceivingClinicianId) as Practitioner;
+            ServiceRequest?.Performer?.GetResourceByIdFromList<Practitioner>(_bundle, NhsFhirConstants.ReceivingClinicianId);
 
         return practitioner?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.GdcNumberSystem)
             ?.Value;
@@ -183,12 +186,12 @@ public class ReferralMapper : IReferralMapper
     private Patient? GetPatient()
     {
         var patientReference = ServiceRequest?.Subject?.Reference;
-        return _bundle?.GetResourceByUrl(patientReference) as Patient;
+        return _bundle?.GetResourceByUrl<Patient>(patientReference);
     }
 
     private Encounter? GetEncounter()
     {
         var encounterReference = ServiceRequest?.Encounter?.Reference;
-        return _bundle?.GetResourceByUrl(encounterReference) as Encounter;
+        return _bundle?.GetResourceByUrl<Encounter>(encounterReference);
     }
 }
