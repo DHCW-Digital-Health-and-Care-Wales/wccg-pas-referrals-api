@@ -47,7 +47,7 @@ public class ExceptionHandlingMiddleware
                 break;
 
             case JsonException jsonException:
-                _logger.BundleDeserializationFailure(jsonException);
+                _logger.InvalidJson(jsonException);
 
                 statusCode = HttpStatusCode.BadRequest;
                 body = jsonException.Message;

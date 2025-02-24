@@ -16,7 +16,11 @@ builder.Services.Configure<ManagedIdentityConfig>(builder.Configuration.GetSecti
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new FhirBundleConverter()); });
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new FhirBundleConverter());
+        options.AllowInputFormatterExceptionMessages = false;
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

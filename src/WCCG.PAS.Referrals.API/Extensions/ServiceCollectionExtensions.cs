@@ -18,7 +18,10 @@ public static class ServiceCollectionExtensions
 {
     public static void AddApplicationInsights(this IServiceCollection services, bool isDevelopmentEnvironment, IConfiguration configuration)
     {
-        services.AddApplicationInsightsTelemetry();
+        var appInsightsConnectionString = configuration.GetRequiredSection(ApplicationInsightsConfig.SectionName)
+            .GetValue<string>(nameof(ApplicationInsightsConfig.ConnectionString));
+
+        services.AddApplicationInsightsTelemetry(options => options.ConnectionString = appInsightsConnectionString);
         services.Configure<TelemetryConfiguration>(config =>
         {
             if (isDevelopmentEnvironment)

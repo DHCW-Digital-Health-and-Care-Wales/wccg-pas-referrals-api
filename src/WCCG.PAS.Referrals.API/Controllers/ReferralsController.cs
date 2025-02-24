@@ -2,12 +2,14 @@ using Hl7.Fhir.Model;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using WCCG.PAS.Referrals.API.Extensions;
+using WCCG.PAS.Referrals.API.Middleware;
 using WCCG.PAS.Referrals.API.Services;
 
 namespace WCCG.PAS.Referrals.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[ModelStateFilter(Order = int.MinValue)]
 public class ReferralsController : ControllerBase
 {
     private readonly ILogger<ReferralsController> _logger;
@@ -24,7 +26,9 @@ public class ReferralsController : ControllerBase
     [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/fhir+json"])]
     [SwaggerResponse(StatusCodes.Status400BadRequest, ContentTypes = ["text/plain", "application/json"])]
     [SwaggerResponse(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateReferral([SwaggerRequestBody(Required = true)] [FromBody] Bundle bundle)
+    public async Task<IActionResult> CreateReferral(
+        [SwaggerRequestBody(Required = true)] [FromBody]
+        Bundle bundle)
     {
         _logger.CalledMethod(nameof(CreateReferral));
 
