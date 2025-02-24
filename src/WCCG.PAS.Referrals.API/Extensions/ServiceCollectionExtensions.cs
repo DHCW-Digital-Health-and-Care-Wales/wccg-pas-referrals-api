@@ -89,14 +89,11 @@ public static class ServiceCollectionExtensions
 
     public static void AddVersioning(this IServiceCollection services)
     {
-        services.AddApiVersioning(options =>
-        {
-            options.DefaultApiVersion = new ApiVersion(1, 0);
-            options.ReportApiVersions = true;
-        }).AddApiExplorer(options =>
-        {
-            options.GroupNameFormat = "'v'VVV";
-            options.SubstituteApiVersionInUrl = true;
-        });
+        services.AddApiVersioning(options => { options.DefaultApiVersion = new ApiVersion(1, 0); })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
     }
 }

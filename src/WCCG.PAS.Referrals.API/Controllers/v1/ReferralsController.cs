@@ -27,7 +27,7 @@ public class ReferralsController : ControllerBase
         _fhirBundleSerializer = fhirBundleSerializer;
     }
 
-    [RawTextRequest]
+    [SwaggerJsonRequest]
     [HttpPost("createReferral")]
     [SwaggerOperation(Summary = "Create referral")]
     [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/fhir+json"])]
