@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.Configuration.OptionValidators;
-using WCCG.PAS.Referrals.API.Converters;
 using WCCG.PAS.Referrals.API.Extensions;
 using WCCG.PAS.Referrals.API.Middleware;
+using WCCG.PAS.Referrals.API.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,15 +16,11 @@ builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConf
 builder.Services.AddOptions<ManagedIdentityConfig>().Bind(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new FhirBundleConverter());
-        options.AllowInputFormatterExceptionMessages = false;
-    });
+builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options => { options.OperationFilter<RawTextRequestOperationFilter>(); });
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), builder.Configuration);
 
@@ -33,6 +30,7 @@ builder.Services.AddCosmosRepositories();
 builder.Services.AddServices();
 builder.Services.AddValidators();
 
+builder.Services.AddVersioning();
 
 var app = builder.Build();
 
@@ -42,7 +40,14 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        var descriptions = app.DescribeApiVersions();
+        foreach (var description in descriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseHttpsRedirection();

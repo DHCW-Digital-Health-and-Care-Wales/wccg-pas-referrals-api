@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Asp.Versioning;
 using Azure.Identity;
 using FluentValidation;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -78,10 +79,24 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IReferralMapper, ReferralMapper>();
         services.AddScoped<IReferralService, ReferralService>();
+        services.AddScoped<IFhirBundleSerializer, FhirBundleJsonSerializer>();
     }
 
     public static void AddValidators(this IServiceCollection services)
     {
         services.AddScoped<IValidator<ReferralDbModel>, ReferralDbModelValidator>();
+    }
+
+    public static void AddVersioning(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.ReportApiVersions = true;
+        }).AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
     }
 }
