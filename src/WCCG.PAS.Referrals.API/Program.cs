@@ -8,11 +8,11 @@ using WCCG.PAS.Referrals.API.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 //CosmosConfig
-builder.Services.Configure<CosmosConfig>(builder.Configuration.GetSection(CosmosConfig.SectionName));
+builder.Services.AddOptions<CosmosConfig>().Bind(builder.Configuration.GetRequiredSection(CosmosConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConfigOptions>();
 
 //ManagedIdentityConfig
-builder.Services.Configure<ManagedIdentityConfig>(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
+builder.Services.AddOptions<ManagedIdentityConfig>().Bind(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
 
 builder.Services.AddControllers()
