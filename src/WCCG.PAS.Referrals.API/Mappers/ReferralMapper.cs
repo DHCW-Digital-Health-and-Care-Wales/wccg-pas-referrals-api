@@ -86,18 +86,18 @@ public class ReferralMapper : IReferralMapper
     private string? GetPatientGpCode()
     {
         return PatientFromServiceRequest?.GeneralPractitioner
-            ?.SelectWithConditions([
+            ?.SelectWithConditions(
                 (x => x.Type, NhsFhirConstants.PractitionerType),
                 (x => x.Identifier?.System, NhsFhirConstants.GmcNumberSystem)
-            ])?.Identifier.Value;
+            )?.Identifier.Value;
     }
 
     private string? GetPatientGpPracticeCode()
     {
-        return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithConditions([
+        return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithConditions(
             (x => x.Type, NhsFhirConstants.OrganizationType),
-            (x => x.Identifier?.System, NhsFhirConstants.OdcOrganizationCodeSystem),
-        ])?.Identifier.Value;
+            (x => x.Identifier?.System, NhsFhirConstants.OdcOrganizationCodeSystem)
+        )?.Identifier.Value;
     }
 
     private string? GetPostcode()

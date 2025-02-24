@@ -1,10 +1,8 @@
 using Hl7.Fhir.Model;
-using WCCG.PAS.Referrals.API.Constants;
-using WCCG.PAS.Referrals.API.DbModels;
 
 namespace WCCG.PAS.Referrals.API.Extensions;
 
-public static class FhirExtensions
+public static class FhirSearchExtensions
 {
     public static T2? SelectNestedWithCondition<T1, T2>(this IEnumerable<T1> resourceList,
         Func<T1?, IEnumerable<T2>?> nestedList,
@@ -33,7 +31,7 @@ public static class FhirExtensions
     }
 
     public static T? SelectWithConditions<T>(this IEnumerable<T> resourceList,
-        (Func<T, string?> conditionProp, string conditionValue)[] conditions)
+        params (Func<T, string?> conditionProp, string conditionValue)[] conditions)
         where T : Base
     {
         return resourceList.FirstOrDefault(x =>
@@ -76,17 +74,13 @@ public static class FhirExtensions
 
     public static T? GetResourceByUrl<T>(this Bundle bundle, string? url) where T : Resource
     {
-        var entryComponent = bundle.Children.OfType<Bundle.EntryComponent>()
-            .FirstOrDefault(x => x.FullUrl is not null
-                                 && x.FullUrl.Equals(url, StringComparison.OrdinalIgnoreCase));
-
-        return entryComponent?.Resource as T;
+        return GetResourceByUrlWithCondition<T>(bundle, url, null, null);
     }
 
     public static T? GetResourceByUrlWithCondition<T>(this Bundle bundle,
         string? url,
-        Func<T, string?> conditionProp,
-        string conditionValue) where T : Resource
+        Func<T, string?>? conditionProp,
+        string? conditionValue) where T : Resource
     {
         var entryComponent = bundle.Children.OfType<Bundle.EntryComponent>()
             .FirstOrDefault(x => x.FullUrl is not null
@@ -95,6 +89,11 @@ public static class FhirExtensions
         if (entryComponent?.Resource is not T tResource)
         {
             return null;
+        }
+
+        if (conditionProp is null || conditionValue is null)
+        {
+            return tResource;
         }
 
         var propertyToCheck = conditionProp(tResource);
@@ -111,22 +110,5 @@ public static class FhirExtensions
         return references.Select(reference => bundle?.GetResourceByUrl<T>(reference.Reference))
             .FirstOrDefault(resource => resource?.Id is not null
                                         && resource.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
-    }
-
-    public static void EnrichForResponse(this Bundle bundle, ReferralDbModel dbModel)
-    {
-        var serviceRequest = bundle.GetResourceByType<ServiceRequest>()!;
-        var patient = bundle.GetResourceByUrl<Patient>(serviceRequest.Subject.Reference)!;
-        var encounter = bundle.GetResourceByUrl<Encounter>(serviceRequest.Encounter.Reference)!;
-        var appointment = bundle.GetResourceByUrl<Appointment>(encounter.Appointment.FirstOrDefault()!.Reference)!;
-
-        patient.Identifier
-            .SelectWithCondition(x => x.System, NhsFhirConstants.PasIdentifierSystem)
-            !.Value = dbModel.CaseNumber;
-
-        appointment.Created = dbModel.BookingDate;
-
-        serviceRequest.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.ReferralIdSystem)
-            !.Value = dbModel.ReferralId;
     }
 }
