@@ -19,6 +19,7 @@ builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateM
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerJsonTextRequestOperationFilter>(); });
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
@@ -31,7 +32,7 @@ builder.Services.AddServices();
 builder.Services.AddValidators();
 
 builder.Services.AddVersioning();
-
+builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -50,6 +51,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
