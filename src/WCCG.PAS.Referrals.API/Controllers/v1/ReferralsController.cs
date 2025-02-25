@@ -27,10 +27,11 @@ public class ReferralsController : ControllerBase
         _fhirBundleSerializer = fhirBundleSerializer;
     }
 
-    [SwaggerJsonRequest]
     [HttpPost("createReferral")]
+    [Produces("application/fhir+json", Type = typeof(Bundle))]
+    [Consumes("application/fhir+json", MediaTypeNames.Application.Json)]
+    [SwaggerJsonRequest]
     [SwaggerOperation(Summary = "Create referral")]
-    [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/fhir+json"])]
     [SwaggerResponse(StatusCodes.Status400BadRequest, ContentTypes = [MediaTypeNames.Application.Json])]
     [SwaggerResponse(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateReferral()
@@ -44,6 +45,6 @@ public class ReferralsController : ControllerBase
         var outputBundle = await _referralService.CreateReferralAsync(bundle);
 
         var outputBundleJson = _fhirBundleSerializer.Serialize(outputBundle);
-        return Ok(outputBundleJson);
+        return new ContentResult { Content = outputBundleJson, StatusCode = 200, ContentType = "application/fhir+json" };
     }
 }

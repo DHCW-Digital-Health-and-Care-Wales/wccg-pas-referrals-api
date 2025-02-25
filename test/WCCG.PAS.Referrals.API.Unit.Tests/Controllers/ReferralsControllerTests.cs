@@ -88,8 +88,9 @@ public class ReferralsControllerTests
         var result = await _sut.CreateReferral();
 
         //Assert
-        result.Should().BeOfType<OkObjectResult>()
-            .Which.Value.Should().Be(outputBundleJson);
+        var contentResult = result.Should().BeOfType<ContentResult>().Subject;
+        contentResult.StatusCode.Should().Be(200);
+        contentResult.Content.Should().Be(outputBundleJson);
     }
 
     private void SetRequestBody(string value)
