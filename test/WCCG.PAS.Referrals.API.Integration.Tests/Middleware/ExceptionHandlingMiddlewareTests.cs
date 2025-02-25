@@ -3,8 +3,10 @@ using System.Text.Json;
 using AutoFixture;
 using FluentAssertions;
 using FluentValidation;
+using FluentValidation.Results;
 using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Hosting;
@@ -30,7 +32,8 @@ public class ExceptionHandlingMiddlewareTests
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        (await response.Content.ReadAsStringAsync()).Should().Be(exception.Message);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
+        problemDetails.Detail.Should().Be(exception.Message);
     }
 
     [Fact]
@@ -45,25 +48,26 @@ public class ExceptionHandlingMiddlewareTests
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        (await response.Content.ReadAsStringAsync()).Should().Be(exception.Message);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
+        problemDetails.Detail.Should().Be(exception.Message);
     }
 
     [Fact]
     public async Task ShouldHandleValidationException()
     {
         //Arrange
-        var exception = _fixture.Create<ValidationException>();
+        var exception = new ValidationException(_fixture.CreateMany<ValidationFailure>());
         var host = StartHost(exception);
 
-        var expectedBody = JsonSerializer.Serialize(exception.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+        var expectedExtensions = JsonSerializer.Serialize(exception.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
 
         //Act
         var response = await host.GetTestClient().GetAsync(HostProvider.TestEndpoint);
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
-        (await response.Content.ReadAsStringAsync()).Should().Be(expectedBody);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
+        problemDetails.Extensions["validationErrors"]?.ToString().Should().BeEquivalentTo(expectedExtensions);
     }
 
     [Fact]
@@ -78,7 +82,8 @@ public class ExceptionHandlingMiddlewareTests
 
         //Assert
         response.StatusCode.Should().Be(exception.StatusCode);
-        (await response.Content.ReadAsStringAsync()).Should().Be(exception.Message);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
+        problemDetails.Detail.Should().Be(exception.Message);
     }
 
     [Fact]
@@ -93,6 +98,8 @@ public class ExceptionHandlingMiddlewareTests
 
         //Assert
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
+        problemDetails.Detail.Should().Be(exception.Message);
     }
 
     private static IHost StartHost(Exception exception)
