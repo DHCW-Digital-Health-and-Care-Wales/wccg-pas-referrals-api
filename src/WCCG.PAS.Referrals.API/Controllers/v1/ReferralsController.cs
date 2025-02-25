@@ -31,7 +31,7 @@ public class ReferralsController : ControllerBase
     [HttpPost("createReferral")]
     [SwaggerOperation(Summary = "Create referral")]
     [SwaggerResponse(StatusCodes.Status200OK, Type = typeof(Bundle), ContentTypes = ["application/fhir+json"])]
-    [SwaggerResponse(StatusCodes.Status400BadRequest, ContentTypes = [MediaTypeNames.Text.Plain, MediaTypeNames.Application.Json])]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, ContentTypes = [MediaTypeNames.Application.Json])]
     [SwaggerResponse(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateReferral()
     {
