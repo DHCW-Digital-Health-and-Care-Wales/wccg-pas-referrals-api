@@ -73,7 +73,7 @@ To run the project locally, follow these steps:
 2. Don't forget `az login --tenant <YOUR_TENNANT>`
 3. Setup local configuration according to `Required configuration for local development` section
 2. Rebuild and run the project.
-6. Open your web browser and navigate to `https://localhost:44361/swagger/index.html' to access the SwaggerUI with API endpoints.
+6. Open your web browser and navigate to `https://localhost:xxxxx/swagger/index.html` to access the SwaggerUI with API endpoints.
 
 ## API Endpoints
 Example payloads for POST endpoints can be found in the `Examples` folder. 
