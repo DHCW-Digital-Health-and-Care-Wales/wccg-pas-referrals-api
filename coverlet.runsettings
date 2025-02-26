@@ -10,6 +10,7 @@
                         **/*.g.cs,
                         **/Program.cs
                     </ExcludeByFile>
+                    <Exclude>[*.tests?]*</Exclude> 
                 </Configuration>
             </DataCollector>
         </DataCollectors>
