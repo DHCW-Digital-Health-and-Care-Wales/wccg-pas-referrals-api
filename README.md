@@ -80,5 +80,5 @@ Example payloads for POST endpoints can be found in the `Examples` folder.
 
 ### POST /api/v1/Referrals/createReferral
 - Description: Creates a referral in CosmosDB and returns enriched response 
-- Request body should be a valid FHIR Bundle JSON object. [Example Payload](./Examples/createReferral-example-payload.json)
+- Request body should be a valid FHIR Bundle JSON object. [Example Payload](./src/WCCG.PAS.Referrals.API/Examples/createReferral-example-payload.json)
 - Response is also a FHIR Bundle but enriched with new values generated while the creation process:
