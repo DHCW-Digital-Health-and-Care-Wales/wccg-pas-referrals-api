@@ -5,7 +5,7 @@ This project is an ASP.NET Core API that provides endpoints for handling Referra
 
 ## Prerequisites
 Make sure you have the following installed and set up:
-- [.NET SDK](https://dotnet.microsoft.com/download) version 8.0 or later
+- [.NET SDK](https://dotnet.microsoft.com/download) version 8.0
 - `az login --tenant <YOUR_TENNANT>`
 - Cosmos database:
     - Deployed CosmosDB in Azure with Read/Write RBAC role for your account **OR** local emulator
@@ -80,5 +80,5 @@ Example payloads for POST endpoints can be found in the `Examples` folder.
 
 ### POST /api/v1/Referrals/createReferral
 - Description: Creates a referral in CosmosDB and returns enriched response 
-- Request body should be a valid FHIR Bundle JSON object. Example `createReferral-example-payload.json`
+- Request body should be a valid FHIR Bundle JSON object. [Example Payload](./Examples/createReferral-example-payload.json)
 - Response is also a FHIR Bundle but enriched with new values generated while the creation process:
