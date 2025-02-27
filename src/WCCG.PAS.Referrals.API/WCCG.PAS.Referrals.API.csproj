@@ -35,4 +35,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Examples\createReferral-example-payload.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
