@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Asp.Versioning;
+using Azure.Core;
 using Azure.Identity;
 using FluentValidation;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -37,33 +38,40 @@ public static class ServiceCollectionExtensions
         });
     }
 
-    public static void AddCosmosClient(this IServiceCollection services, bool isDevelopmentEnvironment)
+    public static void AddCosmosClient(this IServiceCollection services, bool isDevelopmentEnvironment, IConfiguration configuration)
     {
         var cosmosClientOptions = new CosmosClientOptions
         {
-            SerializerOptions = new CosmosSerializationOptions { PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase }
+            SerializerOptions = new CosmosSerializationOptions {PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase}
         };
+
+        var cosmosConfigSection = configuration.GetRequiredSection(CosmosConfig.SectionName);
+        var cosmosEndpoint = cosmosConfigSection.GetValue<string>(nameof(CosmosConfig.DatabaseEndpoint));
+        var cosmosDatabaseName = cosmosConfigSection.GetValue<string>(nameof(CosmosConfig.DatabaseName));
+        var cosmosContainerName = cosmosConfigSection.GetValue<string>(nameof(CosmosConfig.ContainerName));
+
+        TokenCredential tokenCredential;
 
         if (isDevelopmentEnvironment)
         {
-            services.AddSingleton(provider =>
-            {
-                var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
-                return new CosmosClient(cosmosConfig.DatabaseEndpoint, new AzureCliCredential(), cosmosClientOptions);
-            });
-            return;
+            tokenCredential = new AzureCliCredential();
+        }
+        else
+        {
+            var managedIdentityConfig = configuration.GetRequiredSection(ManagedIdentityConfig.SectionName);
+            var clientId = managedIdentityConfig.GetValue<string>(nameof(ManagedIdentityConfig.ClientId));
+
+            tokenCredential = new ManagedIdentityCredential(clientId);
         }
 
-        services.AddSingleton(provider =>
-        {
-            var cosmosConfig = provider.GetRequiredService<IOptions<CosmosConfig>>().Value;
-            var managedIdentityConfig = provider.GetRequiredService<IOptions<ManagedIdentityConfig>>().Value;
+        var cosmosClient = CosmosClient.CreateAndInitializeAsync(
+            cosmosEndpoint,
+            tokenCredential,
+            [(cosmosDatabaseName, cosmosContainerName)],
+            cosmosClientOptions);
+        // Warning: Potentially missing GetAwaiter().GetResult()
 
-            return new CosmosClient(
-                cosmosConfig.DatabaseEndpoint,
-                new ManagedIdentityCredential(managedIdentityConfig.ClientId),
-                cosmosClientOptions);
-        });
+        services.AddSingleton(provider => cosmosClient.Result);
     }
 
     public static void AddCosmosRepositories(this IServiceCollection services)

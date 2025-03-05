@@ -8,6 +8,8 @@ using WCCG.PAS.Referrals.API.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), builder.Configuration);
+
 //CosmosConfig
 builder.Services.AddOptions<CosmosConfig>().Bind(builder.Configuration.GetRequiredSection(CosmosConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConfigOptions>();
@@ -23,9 +25,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerJsonTextRequestOperationFilter>(); });
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
-builder.Services.AddApplicationInsights(builder.Environment.IsDevelopment(), builder.Configuration);
-
-builder.Services.AddCosmosClient(builder.Environment.IsDevelopment());
+builder.Services.AddCosmosClient(builder.Environment.IsDevelopment(), builder.Configuration);
 builder.Services.AddCosmosRepositories();
 
 builder.Services.AddServices();
@@ -33,6 +33,7 @@ builder.Services.AddValidators();
 
 builder.Services.AddVersioning();
 builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
