@@ -42,7 +42,12 @@ public static class ServiceCollectionExtensions
     {
         var cosmosClientOptions = new CosmosClientOptions
         {
-            SerializerOptions = new CosmosSerializationOptions {PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase}
+            SerializerOptions = new CosmosSerializationOptions
+            {
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
+                IgnoreNullValues = false
+            },
+            ConnectionMode = ConnectionMode.Gateway, // TODO: Temporary workaround
         };
 
         var cosmosConfigSection = configuration.GetRequiredSection(CosmosConfig.SectionName);
@@ -51,7 +56,6 @@ public static class ServiceCollectionExtensions
         var cosmosContainerName = cosmosConfigSection.GetValue<string>(nameof(CosmosConfig.ContainerName));
 
         TokenCredential tokenCredential;
-
         if (isDevelopmentEnvironment)
         {
             tokenCredential = new AzureCliCredential();
@@ -71,7 +75,7 @@ public static class ServiceCollectionExtensions
             cosmosClientOptions);
         // Warning: Potentially missing GetAwaiter().GetResult()
 
-        services.AddSingleton(provider => cosmosClient.Result);
+        services.AddSingleton(_ => cosmosClient.Result);
     }
 
     public static void AddCosmosRepositories(this IServiceCollection services)
