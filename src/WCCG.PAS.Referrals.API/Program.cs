@@ -19,7 +19,6 @@ builder.Services.AddOptions<ManagedIdentityConfig>().Bind(builder.Configuration.
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerJsonTextRequestOperationFilter>(); });
