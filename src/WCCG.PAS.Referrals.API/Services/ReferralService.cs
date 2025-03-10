@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentValidation;
 using Hl7.Fhir.Model;
 using WCCG.PAS.Referrals.API.DbModels;
@@ -11,20 +12,24 @@ public class ReferralService : IReferralService
 {
     private readonly IReferralMapper _mapper;
     private readonly IReferralCosmosRepository _repository;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
     private readonly IValidator<ReferralDbModel> _validator;
 
     public ReferralService(
         IReferralMapper mapper,
         IReferralCosmosRepository repository,
+        JsonSerializerOptions jsonSerializerOptions,
         IValidator<ReferralDbModel> validator)
     {
         _mapper = mapper;
         _repository = repository;
+        _jsonSerializerOptions = jsonSerializerOptions;
         _validator = validator;
     }
 
-    public async Task<Bundle> CreateReferralAsync(Bundle bundle)
+    public async Task<string> CreateReferralAsync(string bundleJson)
     {
+        var bundle = JsonSerializer.Deserialize<Bundle>(bundleJson, _jsonSerializerOptions)!;
         var referralDbModel = _mapper.MapFromBundle(bundle);
 
         var validationResult = await _validator.ValidateAsync(referralDbModel);
@@ -36,6 +41,6 @@ public class ReferralService : IReferralService
         await _repository.CreateReferralAsync(referralDbModel);
 
         bundle.EnrichForResponse(referralDbModel);
-        return bundle;
+        return JsonSerializer.Serialize(bundle, _jsonSerializerOptions);
     }
 }

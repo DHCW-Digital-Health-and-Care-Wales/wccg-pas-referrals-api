@@ -9,12 +9,12 @@ using WCCG.PAS.Referrals.API.Extensions;
 
 namespace WCCG.PAS.Referrals.API.Middleware;
 
-public class ExceptionHandlingMiddleware
+public class ResponseMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly ILogger<ResponseMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ResponseMiddleware(RequestDelegate next, ILogger<ResponseMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -64,7 +64,13 @@ public class ExceptionHandlingMiddleware
                 body.Title = "Validation Failed";
                 body.Extensions = new Dictionary<string, object?>
                 {
-                    { "validationErrors", validationException.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }) }
+                    {
+                        "validationErrors", validationException.Errors.Select(e => new
+                        {
+                            e.PropertyName,
+                            e.ErrorMessage
+                        })
+                    }
                 };
                 break;
 

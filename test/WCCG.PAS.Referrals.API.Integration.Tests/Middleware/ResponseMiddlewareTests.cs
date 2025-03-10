@@ -15,7 +15,7 @@ using WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
 
 namespace WCCG.PAS.Referrals.API.Integration.Tests.Middleware;
 
-public class ExceptionHandlingMiddlewareTests
+public class ResponseMiddlewareTests
 {
     private readonly IFixture _fixture = new Fixture().WithCustomizations();
 
@@ -59,7 +59,11 @@ public class ExceptionHandlingMiddlewareTests
         var exception = new ValidationException(_fixture.CreateMany<ValidationFailure>());
         var host = StartHost(exception);
 
-        var expectedExtensions = JsonSerializer.Serialize(exception.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
+        var expectedExtensions = JsonSerializer.Serialize(exception.Errors.Select(e => new
+        {
+            e.PropertyName,
+            e.ErrorMessage
+        }));
 
         //Act
         var response = await host.GetTestClient().GetAsync(HostProvider.TestEndpoint);
@@ -105,6 +109,6 @@ public class ExceptionHandlingMiddlewareTests
     private static IHost StartHost(Exception exception)
     {
         return HostProvider.StartHostWithEndpoint(_ => throw exception,
-            configureApp: app => app.UseMiddleware<ExceptionHandlingMiddleware>());
+            configureApp: app => app.UseMiddleware<ResponseMiddleware>());
     }
 }

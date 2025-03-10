@@ -20,11 +20,11 @@ public static class FhirResponseExtensions
 
     private static void CreateOrUpdateCaseNumber(Patient patient, string caseNumberValue)
     {
-        var pasIdentifierSystem = patient.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.PasIdentifierSystem);
+        var pasIdentifierSystem = patient.Identifier.SelectWithCondition(x => x.System, FhirConstants.PasIdentifierSystem);
 
         if (pasIdentifierSystem is null)
         {
-            patient.Identifier.Add(new Identifier(NhsFhirConstants.PasIdentifierSystem, caseNumberValue));
+            patient.Identifier.Add(new Identifier(FhirConstants.PasIdentifierSystem, caseNumberValue));
             return;
         }
 
@@ -33,11 +33,11 @@ public static class FhirResponseExtensions
 
     private static void CreateOrUpdateReferralId(ServiceRequest serviceRequest, string referralIdValue)
     {
-        var referralIdSystem = serviceRequest.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.ReferralIdSystem);
+        var referralIdSystem = serviceRequest.Identifier.SelectWithCondition(x => x.System, FhirConstants.ReferralIdSystem);
 
         if (referralIdSystem is null)
         {
-            serviceRequest.Identifier.Add(new Identifier(NhsFhirConstants.ReferralIdSystem, referralIdValue));
+            serviceRequest.Identifier.Add(new Identifier(FhirConstants.ReferralIdSystem, referralIdValue));
             return;
         }
 

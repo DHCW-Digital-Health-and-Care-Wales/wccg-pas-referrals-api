@@ -56,7 +56,7 @@ public class ReferralMapper : IReferralMapper
     private string? GetNhsNumber()
     {
         return PatientFromServiceRequest?.Identifier
-            ?.SelectWithCondition(x => x.System, NhsFhirConstants.NhsNumberSystem)
+            ?.SelectWithCondition(x => x.System, FhirConstants.NhsNumberSystem)
             ?.Value;
     }
 
@@ -64,9 +64,9 @@ public class ReferralMapper : IReferralMapper
     {
         var practitionerReference = ServiceRequest?.Requester?.Reference;
         var practitioner =
-            _bundle?.GetResourceByUrlWithCondition<Practitioner>(practitionerReference, p => p.Id, NhsFhirConstants.RequestingPractitioner);
+            _bundle?.GetResourceByUrlWithCondition<Practitioner>(practitionerReference, p => p.Id, FhirConstants.RequestingPractitioner);
 
-        return practitioner?.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.GmcNumberSystem)
+        return practitioner?.Identifier.SelectWithCondition(x => x.System, FhirConstants.GmcNumberSystem)
             ?.Value;
     }
 
@@ -75,11 +75,11 @@ public class ReferralMapper : IReferralMapper
         var appointmentReference = EncounterFromServiceRequest?.Appointment?.FirstOrDefault()?.Reference;
         var appointment = _bundle?.GetResourceByUrl<Appointment>(appointmentReference);
 
-        var organisationReference = appointment?.Extension?.SelectWithCondition(x => x.Url, NhsFhirConstants.BookingOrganisation)
-            ?.Value.NamedChildren?.GetStringValueByElementName(NhsFhirConstants.ReferenceElementName);
+        var organisationReference = appointment?.Extension?.SelectWithCondition(x => x.Url, FhirConstants.BookingOrganisation)
+            ?.Value.NamedChildren?.GetStringValueByElementName(FhirConstants.ReferenceElementName);
         var organisation = _bundle?.GetResourceByUrl<Organization>(organisationReference);
 
-        return organisation?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.OdcOrganizationCodeSystem)
+        return organisation?.Identifier?.SelectWithCondition(x => x.System, FhirConstants.OdcOrganizationCodeSystem)
             ?.Value;
     }
 
@@ -87,16 +87,16 @@ public class ReferralMapper : IReferralMapper
     {
         return PatientFromServiceRequest?.GeneralPractitioner
             ?.SelectWithConditions(
-                (x => x.Type, NhsFhirConstants.PractitionerType),
-                (x => x.Identifier?.System, NhsFhirConstants.GmcNumberSystem)
+                (x => x.Type, FhirConstants.PractitionerType),
+                (x => x.Identifier?.System, FhirConstants.GmcNumberSystem)
             )?.Identifier.Value;
     }
 
     private string? GetPatientGpPracticeCode()
     {
         return PatientFromServiceRequest?.GeneralPractitioner?.SelectWithConditions(
-            (x => x.Type, NhsFhirConstants.OrganizationType),
-            (x => x.Identifier?.System, NhsFhirConstants.OdcOrganizationCodeSystem)
+            (x => x.Type, FhirConstants.OrganizationType),
+            (x => x.Identifier?.System, FhirConstants.OdcOrganizationCodeSystem)
         )?.Identifier.Value;
     }
 
@@ -107,25 +107,25 @@ public class ReferralMapper : IReferralMapper
 
     private string? GetPatientHealthBoardAreaCode()
     {
-        var organization = ServiceRequest?.Performer?.GetResourceByIdFromList<Organization>(_bundle, NhsFhirConstants.DhaCodeId);
+        var organization = ServiceRequest?.Performer?.GetResourceByIdFromList<Organization>(_bundle, FhirConstants.DhaCodeId);
 
-        return organization?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.OdcOrganizationCodeSystem)
+        return organization?.Identifier?.SelectWithCondition(x => x.System, FhirConstants.OdcOrganizationCodeSystem)
             ?.Value;
     }
 
     private string? GetLetterPriority()
     {
         return EncounterFromServiceRequest?.Priority?.Coding
-            ?.SelectWithCondition(x => x.System, NhsFhirConstants.LetterPrioritySystem)
+            ?.SelectWithCondition(x => x.System, FhirConstants.LetterPrioritySystem)
             ?.Code;
     }
 
     private string? GetReferralAssignedConsultant()
     {
         var practitioner =
-            ServiceRequest?.Performer?.GetResourceByIdFromList<Practitioner>(_bundle, NhsFhirConstants.ReceivingClinicianId);
+            ServiceRequest?.Performer?.GetResourceByIdFromList<Practitioner>(_bundle, FhirConstants.ReceivingClinicianId);
 
-        return practitioner?.Identifier?.SelectWithCondition(x => x.System, NhsFhirConstants.GdcNumberSystem)
+        return practitioner?.Identifier?.SelectWithCondition(x => x.System, FhirConstants.GdcNumberSystem)
             ?.Value;
     }
 
@@ -134,7 +134,7 @@ public class ReferralMapper : IReferralMapper
         return ServiceRequest?.LocationCode?.SelectNestedWithCondition(
                 x => x?.Coding,
                 c => c?.System,
-                NhsFhirConstants.OdcOrganizationCodeSystem)
+                FhirConstants.OdcOrganizationCodeSystem)
             ?.Code;
     }
 
@@ -143,14 +143,14 @@ public class ReferralMapper : IReferralMapper
         return ServiceRequest?.OrderDetail?.SelectNestedWithCondition(
                 x => x?.Coding,
                 c => c?.System,
-                NhsFhirConstants.PatientCategorySystem)
+                FhirConstants.PatientCategorySystem)
             ?.Code;
     }
 
     private string? GetSpecialityIdentifier()
     {
         return EncounterFromServiceRequest?.ServiceType?.Coding
-            ?.SelectWithCondition(x => x.System, NhsFhirConstants.SpecialityIdentifierSystem)
+            ?.SelectWithCondition(x => x.System, FhirConstants.SpecialityIdentifierSystem)
             ?.Code;
     }
 
@@ -174,7 +174,7 @@ public class ReferralMapper : IReferralMapper
         return ServiceRequest?.OrderDetail?.SelectNestedWithCondition(
                 x => x?.Coding,
                 c => c?.System,
-                NhsFhirConstants.RiskFactorSystem)
+                FhirConstants.RiskFactorSystem)
             ?.Code;
     }
 

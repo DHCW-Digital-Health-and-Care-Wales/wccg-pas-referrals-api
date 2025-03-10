@@ -1,7 +1,9 @@
 namespace WCCG.PAS.Referrals.API.Constants;
 
-public class NhsFhirConstants
+public class FhirConstants
 {
+    public const string FhirMediaType = "application/fhir+json";
+
     public const string NhsNumberSystem = "https://fhir.nhs.uk/Id/nhs-number";
     public const string PasIdentifierSystem = "https://fhir.hduhb.nhs.wales/Id/pas-identifier";
     public const string GmcNumberSystem = "https://fhir.hl7.org.uk/Id/gmc-number";

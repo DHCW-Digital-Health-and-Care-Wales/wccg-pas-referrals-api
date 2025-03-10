@@ -91,7 +91,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IReferralMapper, ReferralMapper>();
         services.AddScoped<IReferralService, ReferralService>();
-        services.AddScoped<IFhirBundleSerializer, FhirBundleJsonSerializer>();
     }
 
     public static void AddValidators(this IServiceCollection services)
