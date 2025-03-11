@@ -59,6 +59,39 @@ public class ReferralsControllerTests
         contentResult.Content.Should().Be(outputBundleJson);
     }
 
+    [Fact]
+    public async Task GetReferralShouldCallGetReferralAsync()
+    {
+        //Arrange
+        var referralId = _fixture.Create<string>();
+
+        //Act
+        await _sut.GetReferral(referralId);
+
+        //Assert
+        _fixture.Mock<IReferralService>().Verify(x => x.GetReferralAsync(referralId));
+    }
+
+    [Fact]
+    public async Task GetReferralShouldReturn200()
+    {
+        //Arrange
+        var referralId = _fixture.Create<string>();
+        var outputBundleJson = _fixture.Create<string>();
+
+        _fixture.Mock<IReferralService>().Setup(x => x.GetReferralAsync(It.IsAny<string>()))
+            .ReturnsAsync(outputBundleJson);
+
+        //Act
+        var result = await _sut.GetReferral(referralId);
+
+        //Assert
+        var contentResult = result.Should().BeOfType<ContentResult>().Subject;
+        contentResult.StatusCode.Should().Be(200);
+        contentResult.ContentType.Should().Be(FhirConstants.FhirMediaType);
+        contentResult.Content.Should().Be(outputBundleJson);
+    }
+
     private void SetRequestBody(string value)
     {
         _sut.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };

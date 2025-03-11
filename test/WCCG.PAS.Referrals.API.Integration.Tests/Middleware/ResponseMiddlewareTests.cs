@@ -74,11 +74,15 @@ public class ResponseMiddlewareTests
         problemDetails.Extensions["validationErrors"]?.ToString().Should().BeEquivalentTo(expectedExtensions);
     }
 
-    [Fact]
-    public async Task ShouldHandleCosmosException()
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound, "Referral with the provided ID was not found.")]
+    [InlineData(HttpStatusCode.Forbidden, "Access denied: Unable to connect to CosmosDB.")]
+    [InlineData(HttpStatusCode.BadRequest, "Bad request while calling CosmosDB.")]
+    [InlineData(HttpStatusCode.InternalServerError, "Unexpected error occurred while calling CosmosDB.")]
+    public async Task ShouldHandleCosmosException(HttpStatusCode code, string message)
     {
         //Arrange
-        var exception = _fixture.Create<CosmosException>();
+        var exception = new CosmosException("", code, 0, "", 0);
         var host = StartHost(exception);
 
         //Act
@@ -87,7 +91,8 @@ public class ResponseMiddlewareTests
         //Assert
         response.StatusCode.Should().Be(exception.StatusCode);
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
-        problemDetails.Detail.Should().Be(exception.Message);
+        problemDetails.Title.Should().Be("Cosmos database failure");
+        problemDetails.Detail.Should().Be(message);
     }
 
     [Fact]

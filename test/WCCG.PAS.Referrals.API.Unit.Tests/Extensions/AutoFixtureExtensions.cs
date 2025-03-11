@@ -1,5 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using FluentAssertions;
+using FluentAssertions.Primitives;
 using Moq;
 
 namespace WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
@@ -32,5 +34,12 @@ public static class AutoFixtureExtensions
     public static Mock<T> Mock<T>(this IFixture fixture) where T : class
     {
         return fixture.Freeze<Mock<T>>();
+    }
+
+    public static AndConstraint<StringAssertions> BeValidFhirUrl(this StringAssertions stringAssertions)
+    {
+        Guid guid;
+        return stringAssertions.Subject.Should().StartWith("urn:uuid:")
+            .And.Subject.Split("urn:uuid:")[1].Should().Match(x => Guid.TryParse(x, out guid));
     }
 }

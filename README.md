@@ -23,6 +23,11 @@ To configure the project, follow these steps:
 
   "ApplicationInsights": {
     "ConnectionString": "<YOUR_APPINSIGHTS_CONNECTION_STRING>"
+  },
+
+  "BundleCreation": {
+    "EReferralsBaseUrl": "<YOUR_EREFERRAL_BASE_URL>",
+    "DentalUiBaseUrl": "<YOUR_DENTAL_UI_BASE_URL>"
   }
 }
 ```

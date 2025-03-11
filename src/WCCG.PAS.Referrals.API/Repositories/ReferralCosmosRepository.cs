@@ -20,4 +20,9 @@ public class ReferralCosmosRepository : IReferralCosmosRepository
     {
         await _container.CreateItemAsync(referralDbModel);
     }
+
+    public async Task<ReferralDbModel> GetReferralAsync(string referralId)
+    {
+        return await _container.ReadItemAsync<ReferralDbModel>(referralId, new PartitionKey(referralId));
+    }
 }

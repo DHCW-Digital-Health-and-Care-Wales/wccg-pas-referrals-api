@@ -18,12 +18,17 @@ builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConf
 //ManagedIdentityConfig
 builder.Services.AddOptions<ManagedIdentityConfig>().Bind(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
+
+//BundleCreationConfig
+builder.Services.AddOptions<BundleCreationConfig>().Bind(builder.Configuration.GetSection(BundleCreationConfig.SectionName));
+builder.Services.AddSingleton<IValidateOptions<BundleCreationConfig>, ValidateBundleCreationConfigOptions>();
+
 builder.Services.AddSingleton(new JsonSerializerOptions().ForFhirExtended());
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerCreateReferralOperationFilter>(); });
+builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerOperationFilter>(); });
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 builder.Services.AddCosmosClient(builder.Environment.IsDevelopment(), builder.Configuration);
