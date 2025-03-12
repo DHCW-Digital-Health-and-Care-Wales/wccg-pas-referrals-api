@@ -64,7 +64,7 @@ public class ExceptionHandlingMiddleware
                 body.Title = "Validation Failed";
                 body.Extensions = new Dictionary<string, object?>
                 {
-                    { "validationErrors", validationException.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }) }
+                    { "validationErrors", validationException.Errors.Select(e => e.ErrorMessage) }
                 };
                 break;
 
