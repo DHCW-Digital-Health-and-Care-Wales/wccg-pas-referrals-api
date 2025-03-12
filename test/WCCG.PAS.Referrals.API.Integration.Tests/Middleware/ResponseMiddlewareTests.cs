@@ -75,11 +75,10 @@ public class ResponseMiddlewareTests
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.NotFound, "Referral with the provided ID was not found.")]
-    [InlineData(HttpStatusCode.Forbidden, "Access denied: Unable to connect to CosmosDB.")]
-    [InlineData(HttpStatusCode.BadRequest, "Bad request while calling CosmosDB.")]
-    [InlineData(HttpStatusCode.InternalServerError, "Unexpected error occurred while calling CosmosDB.")]
-    public async Task ShouldHandleCosmosException(HttpStatusCode code, string message)
+    [InlineData(HttpStatusCode.NotFound, "CosmosDB: Document not found", "Referral with the provided ID was not found.")]
+    [InlineData(HttpStatusCode.TooManyRequests, "CosmosDB: Too many requests", "Too many requests have been made within the allowed time.")]
+    [InlineData(HttpStatusCode.InternalServerError, "CosmosDb: Unexpected error", "Unexpected error occurred while calling CosmosDB.")]
+    public async Task ShouldHandleCosmosException(HttpStatusCode code, string title, string message)
     {
         //Arrange
         var exception = new CosmosException("", code, 0, "", 0);
@@ -91,7 +90,7 @@ public class ResponseMiddlewareTests
         //Assert
         response.StatusCode.Should().Be(exception.StatusCode);
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
-        problemDetails.Title.Should().Be("Cosmos database failure");
+        problemDetails.Title.Should().Be(title);
         problemDetails.Detail.Should().Be(message);
     }
 

@@ -4,6 +4,7 @@ using FluentAssertions;
 using Hl7.Fhir.Model;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
+using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
 using WCCG.PAS.Referrals.API.Helpers;
 using WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
@@ -34,8 +35,8 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var destinationOrganization = GetEntryComponentByResource<Organization>(bundle, "Destination");
-        var referringPracticeOrganization = GetEntryComponentByResource<Organization>(bundle, "ReferringPractice");
+        var destinationOrganization = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DestinationId);
+        var referringPracticeOrganization = GetEntryComponentByResource<Organization>(bundle, FhirConstants.ReferringPracticeId);
         var serviceRequest = GetEntryComponentByResource<ServiceRequest>(bundle);
 
         var messageHeaderEntry = GetEntryComponentByResource<MessageHeader>(bundle);
@@ -43,15 +44,16 @@ public class BundleCreatorTests
         messageHeaderEntry!.FullUrl.Should().BeValidFhirUrl();
 
         var messageHeader = messageHeaderEntry.Resource as MessageHeader;
-        (messageHeader!.Event as Coding)!.System.Should().Be("https://fhir.nhs.uk/CodeSystem/message-events-bars");
+        (messageHeader!.Event as Coding)!.System.Should().Be(FhirConstants.EvenBarSystem);
         (messageHeader.Event as Coding)!.Code.Should().Be("servicerequest-request");
         messageHeader.Destination.Should().HaveCount(1);
         messageHeader.Destination[0].Receiver.Reference.Should().Be(destinationOrganization!.FullUrl);
-        messageHeader.Destination[0].Endpoint.Should().Be(_config.EReferralsBaseUrl + _config.EReferralsCreateReferralEndpoint);
+        messageHeader.Destination[0].Endpoint.Should()
+            .Be($"{_config.EReferralsBaseUrl}{_config.EReferralsCreateReferralEndpoint}|0000000000");
         messageHeader.Sender.Reference.Should().Be(referringPracticeOrganization!.FullUrl);
         messageHeader.Source.Endpoint.Should().Be(_config.DentalUiBaseUrl);
         messageHeader.Reason.Coding.Should().HaveCount(1);
-        messageHeader.Reason.Coding[0].System.Should().Be("https://fhir.nhs.uk/CodeSystem/message-reason-bars");
+        messageHeader.Reason.Coding[0].System.Should().Be(FhirConstants.ReasonBarSystem);
         messageHeader.Reason.Coding[0].Code.Should().Be("new");
         messageHeader.Focus.Should().HaveCount(1);
         messageHeader.Focus[0].Reference.Should().Be(serviceRequest!.FullUrl);
@@ -71,8 +73,8 @@ public class BundleCreatorTests
         //Assert
         var carePlan = GetEntryComponentByResource<CarePlan>(bundle);
         var patient = GetEntryComponentByResource<Patient>(bundle);
-        var referringPractitioner = GetEntryComponentByResource<Practitioner>(bundle, "RequestingPractitioner");
-        var dhaOrganization = GetEntryComponentByResource<Organization>(bundle, "DhaCode");
+        var referringPractitioner = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.RequestingPractitionerId);
+        var dhaOrganization = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DhaCodeId);
         var requesterEncounter = GetEncounterByStatus(bundle, Encounter.EncounterStatus.Finished);
 
         var serviceRequestEntry = GetEntryComponentByResource<ServiceRequest>(bundle);
@@ -83,15 +85,15 @@ public class BundleCreatorTests
         serviceRequest!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral");
         serviceRequest.Identifier.Should().HaveCount(2);
-        serviceRequest.Identifier[0].System.Should().Be("dhcw/LinkId");
+        serviceRequest.Identifier[0].System.Should().Be(FhirConstants.LinkIdSystem);
         serviceRequest.Identifier[0].Value.Should().StartWith("REF")
             .And.Subject.Split("REF")[1].Should().Match(x =>
                 DateTimeOffset.TryParseExact(x, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out datePlaceholder));
-        serviceRequest.Identifier[1].System.Should().Be("ReferralUniqueId");
+        serviceRequest.Identifier[1].System.Should().Be(FhirConstants.ReferralIdSystem);
         serviceRequest.Identifier[1].Value.Should().Be(dbModel.ReferralId);
         serviceRequest.Category.Should().HaveCount(1);
         serviceRequest.Category[0].Coding.Should().HaveCount(1);
-        serviceRequest.Category[0].Coding[0].System.Should().Be("https://fhir.nhs.uk/CodeSystem/message-category-servicerequest");
+        serviceRequest.Category[0].Coding[0].System.Should().Be(FhirConstants.ServiceRequestCategorySystem);
         serviceRequest.Category[0].Coding[0].Code.Should().Be("referral");
         serviceRequest.Category[0].Coding[0].Display.Should().Be("Transfer of Care");
         serviceRequest.BasedOn.Should().HaveCount(1);
@@ -106,19 +108,19 @@ public class BundleCreatorTests
         serviceRequest.Performer[0].Reference.Should().Be(dhaOrganization!.FullUrl);
         serviceRequest.OrderDetail.Should().HaveCount(5);
         serviceRequest.OrderDetail[0].Coding.Should().HaveCount(1);
-        serviceRequest.OrderDetail[0].Coding[0].System.Should().Be("dhcw/WlistCodes");
+        serviceRequest.OrderDetail[0].Coding[0].System.Should().Be(FhirConstants.WlistCodesSystem);
         serviceRequest.OrderDetail[0].Coding[0].Code.Should().Be(dbModel.WaitingList);
         serviceRequest.OrderDetail[1].Coding.Should().HaveCount(1);
-        serviceRequest.OrderDetail[1].Coding[0].System.Should().Be("dhcw/IntentReferValues");
+        serviceRequest.OrderDetail[1].Coding[0].System.Should().Be(FhirConstants.IntentReferValuesSystem);
         serviceRequest.OrderDetail[1].Coding[0].Code.Should().Be(dbModel.IntendedManagement);
         serviceRequest.OrderDetail[2].Coding.Should().HaveCount(1);
-        serviceRequest.OrderDetail[2].Coding[0].System.Should().Be("dhcw/patientCategory");
+        serviceRequest.OrderDetail[2].Coding[0].System.Should().Be(FhirConstants.PatientCategorySystem);
         serviceRequest.OrderDetail[2].Coding[0].Code.Should().Be(dbModel.PatientCategory);
         serviceRequest.OrderDetail[3].Coding.Should().HaveCount(1);
-        serviceRequest.OrderDetail[3].Coding[0].System.Should().Be("dhcw/Datonsys");
+        serviceRequest.OrderDetail[3].Coding[0].System.Should().Be(FhirConstants.DatonsysSystem);
         serviceRequest.OrderDetail[3].Coding[0].Code.Should().Be(dbModel.HealthBoardReceiveDate);
         serviceRequest.OrderDetail[4].Coding.Should().HaveCount(1);
-        serviceRequest.OrderDetail[4].Coding[0].System.Should().Be("dhcw/optom/hrf");
+        serviceRequest.OrderDetail[4].Coding[0].System.Should().Be(FhirConstants.RiskFactorSystem);
         serviceRequest.OrderDetail[4].Coding[0].Code.Should().Be(dbModel.HealthRiskFactor);
         serviceRequest.Encounter.Reference.Should().Be(requesterEncounter!.FullUrl);
         (serviceRequest.Occurrence as Timing)!.Event.Should().HaveCount(1);
@@ -127,12 +129,12 @@ public class BundleCreatorTests
         (serviceRequest.Occurrence as Timing)!.Repeat.PeriodUnit.Should().Be(Timing.UnitsOfTime.D);
         serviceRequest.LocationCode.Should().HaveCount(1);
         serviceRequest.LocationCode[0].Coding.Should().HaveCount(1);
-        serviceRequest.LocationCode[0].Coding[0].System.Should().Be("https://fhir.nhs.uk/Id/ods-organization-code");
+        serviceRequest.LocationCode[0].Coding[0].System.Should().Be(FhirConstants.OdcOrganizationCodeSystem);
         serviceRequest.LocationCode[0].Coding[0].Code.Should().Be(dbModel.ReferralAssignedLocation);
         serviceRequest.Extension.Should().HaveCount(1);
         serviceRequest.Extension[0].Url.Should().Be("https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-SourceOfServiceRequest");
         (serviceRequest.Extension[0].Value as CodeableConcept)!.Coding.Should().HaveCount(1);
-        (serviceRequest.Extension[0].Value as CodeableConcept)!.Coding[0].System.Should().Be("http://snomed.info/sct");
+        (serviceRequest.Extension[0].Value as CodeableConcept)!.Coding[0].System.Should().Be(FhirConstants.SctSystem);
         (serviceRequest.Extension[0].Value as CodeableConcept)!.Coding[0].Code.Should().Be(dbModel.ReferrerSourceType);
         (serviceRequest.Extension[0].Value as CodeableConcept)!.Coding[0].Display.Should().Be("General Dental Practice");
     }
@@ -155,25 +157,25 @@ public class BundleCreatorTests
         patient!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Patient");
         patient.Identifier.Should().HaveCount(2);
-        patient.Identifier[0].System.Should().Be("https://fhir.nhs.uk/Id/nhs-number");
+        patient.Identifier[0].System.Should().Be(FhirConstants.NhsNumberSystem);
         patient.Identifier[0].Value.Should().Be(dbModel.NhsNumber);
         patient.Identifier[0].Extension.Should().HaveCount(1);
         patient.Identifier[0].Extension[0].Url.Should()
             .Be("https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-NHSNumberVerificationStatus");
         (patient.Identifier[0].Extension[0].Value as CodeableConcept)!.Coding.Should().HaveCount(1);
         (patient.Identifier[0].Extension[0].Value as CodeableConcept)!.Coding[0].System.Should()
-            .Be("https://fhir.hl7.org.uk/CodeSystem/UKCore-NHSNumberVerificationStatusEngland");
+            .Be(FhirConstants.VerificationStatusSystem);
         (patient.Identifier[0].Extension[0].Value as CodeableConcept)!.Coding[0].Code.Should().Be("01");
-        patient.Identifier[1].System.Should().Be("https://fhir.hduhb.nhs.wales/Id/pas-identifier");
+        patient.Identifier[1].System.Should().Be(FhirConstants.PasIdentifierSystem);
         patient.Identifier[1].Value.Should().Be(dbModel.CaseNumber);
         patient.Address.Should().HaveCount(1);
         patient.Address[0].PostalCode.Should().Be(dbModel.PatientPostcode);
         patient.GeneralPractitioner.Should().HaveCount(2);
-        patient.GeneralPractitioner[0].Type.Should().Be("Organization");
-        patient.GeneralPractitioner[0].Identifier.System.Should().Be("https://fhir.nhs.uk/Id/ods-organization-code");
+        patient.GeneralPractitioner[0].Type.Should().Be(FhirConstants.OrganizationType);
+        patient.GeneralPractitioner[0].Identifier.System.Should().Be(FhirConstants.OdcOrganizationCodeSystem);
         patient.GeneralPractitioner[0].Identifier.Value.Should().Be(dbModel.PatientGpPracticeCode);
-        patient.GeneralPractitioner[1].Type.Should().Be("Practitioner");
-        patient.GeneralPractitioner[1].Identifier.System.Should().Be("https://fhir.hl7.org.uk/Id/gmc-number");
+        patient.GeneralPractitioner[1].Type.Should().Be(FhirConstants.PractitionerType);
+        patient.GeneralPractitioner[1].Identifier.System.Should().Be(FhirConstants.GmcNumberSystem);
         patient.GeneralPractitioner[1].Identifier.Value.Should().Be(dbModel.PatientGpCode);
     }
 
@@ -187,7 +189,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, "ReceivingClinician");
+        var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.ReceivingClinicianId);
         practitionerEntry.Should().NotBeNull();
         practitionerEntry!.FullUrl.Should().BeValidFhirUrl();
 
@@ -195,7 +197,7 @@ public class BundleCreatorTests
         practitioner!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner");
         practitioner.Identifier.Should().HaveCount(1);
-        practitioner.Identifier[0].System.Should().Be("https://fhir.hl7.org.uk/Id/gdc-number");
+        practitioner.Identifier[0].System.Should().Be(FhirConstants.GdcNumberSystem);
         practitioner.Identifier[0].Value.Should().Be(dbModel.ReferralAssignedConsultant);
     }
 
@@ -209,7 +211,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, "RequestingPractitioner");
+        var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.RequestingPractitionerId);
         practitionerEntry.Should().NotBeNull();
         practitionerEntry!.FullUrl.Should().BeValidFhirUrl();
 
@@ -217,7 +219,7 @@ public class BundleCreatorTests
         practitioner!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner");
         practitioner.Identifier.Should().HaveCount(1);
-        practitioner.Identifier[0].System.Should().Be("https://fhir.hl7.org.uk/Id/gdc-number");
+        practitioner.Identifier[0].System.Should().Be(FhirConstants.GdcNumberSystem);
         practitioner.Identifier[0].Value.Should().Be(dbModel.Referrer);
     }
 
@@ -231,7 +233,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, "DhaCode");
+        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DhaCodeId);
         organizationEntry.Should().NotBeNull();
         organizationEntry!.FullUrl.Should().BeValidFhirUrl();
 
@@ -239,7 +241,7 @@ public class BundleCreatorTests
         organization!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization");
         organization.Identifier.Should().HaveCount(1);
-        organization.Identifier[0].System.Should().Be("https://fhir.nhs.uk/Id/ods-organization-code");
+        organization.Identifier[0].System.Should().Be(FhirConstants.OdcOrganizationCodeSystem);
         organization.Identifier[0].Value.Should().Be(dbModel.PatientHealthBoardAreaCode);
     }
 
@@ -253,7 +255,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, "ReferringPractice");
+        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.ReferringPracticeId);
         organizationEntry.Should().NotBeNull();
         organizationEntry!.FullUrl.Should().BeValidFhirUrl();
 
@@ -261,7 +263,7 @@ public class BundleCreatorTests
         organization!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization");
         organization.Identifier.Should().HaveCount(1);
-        organization.Identifier[0].System.Should().Be("https://fhir.nhs.uk/Id/ods-organization-code");
+        organization.Identifier[0].System.Should().Be(FhirConstants.OdcOrganizationCodeSystem);
         organization.Identifier[0].Value.Should().Be(dbModel.ReferrerAddress);
     }
 
@@ -275,7 +277,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, "Destination");
+        var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DestinationId);
         organizationEntry.Should().NotBeNull();
         organizationEntry!.FullUrl.Should().BeValidFhirUrl();
 
@@ -283,7 +285,7 @@ public class BundleCreatorTests
         organization!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization");
         organization.Identifier.Should().HaveCount(1);
-        organization.Identifier[0].System.Should().Be("https://fhir.nhs.uk/Id/ods-organization-code");
+        organization.Identifier[0].System.Should().Be(FhirConstants.OdcOrganizationCodeSystem);
         organization.Identifier[0].Value.Should().Be("L5X6M");
     }
 
@@ -306,15 +308,15 @@ public class BundleCreatorTests
         var encounter = encounterEntry.Resource as Encounter;
         encounter!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter");
-        encounter.Class.System.Should().Be("http://snomed.info/sct");
+        encounter.Class.System.Should().Be(FhirConstants.SctSystem);
         encounter.Class.Code.Should().Be("327121000000104");
         encounter.Class.Display.Should().Be("Referral to dental service");
         encounter.ServiceType.Coding.Should().HaveCount(1);
-        encounter.ServiceType.Coding[0].System.Should().Be("dhcw/SPEC");
+        encounter.ServiceType.Coding[0].System.Should().Be(FhirConstants.SpecialityIdentifierSystem);
         encounter.ServiceType.Coding[0].Code.Should().Be(dbModel.SpecialityIdentifier);
         encounter.ServiceType.Coding[0].Display.Should().Be("Referral to dental service");
         encounter.Priority.Coding.Should().HaveCount(1);
-        encounter.Priority.Coding[0].System.Should().Be("dhcw/lttrPriority");
+        encounter.Priority.Coding[0].System.Should().Be(FhirConstants.LetterPrioritySystem);
         encounter.Priority.Coding[0].Code.Should().Be(dbModel.LetterPriority);
         encounter.Appointment.Should().HaveCount(1);
         encounter.Appointment[0].Reference.Should().Be(appointment!.FullUrl);
@@ -330,7 +332,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var organization = GetEntryComponentByResource<Organization>(bundle, "ReferringPractice");
+        var organization = GetEntryComponentByResource<Organization>(bundle, FhirConstants.ReferringPracticeId);
         var patient = GetEntryComponentByResource<Patient>(bundle);
 
         var appointmentEntry = GetAppointmentByStatus(bundle, Appointment.AppointmentStatus.Fulfilled);
@@ -341,7 +343,7 @@ public class BundleCreatorTests
         appointment!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment");
         appointment.Extension.Should().HaveCount(1);
-        appointment.Extension[0].Url.Should().Be("BookingOrganization");
+        appointment.Extension[0].Url.Should().Be(FhirConstants.BookingOrganisation);
         (appointment.Extension[0].Value as ResourceReference)!.Reference.Should().Be(organization!.FullUrl);
         appointment.Created.Should().Be(dbModel.BookingDate);
         appointment.Participant.Should().HaveCount(1);
@@ -395,15 +397,15 @@ public class BundleCreatorTests
         var encounter = encounterEntry.Resource as Encounter;
         encounter!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter");
-        encounter.Class.System.Should().Be("http://snomed.info/sct");
+        encounter.Class.System.Should().Be(FhirConstants.SctSystem);
         encounter.Class.Code.Should().Be("373864002");
         encounter.Class.Display.Should().Be("outpatient");
         encounter.ServiceType.Coding.Should().HaveCount(1);
-        encounter.ServiceType.Coding[0].System.Should().Be("dhcw/SPEC");
+        encounter.ServiceType.Coding[0].System.Should().Be(FhirConstants.SpecialityIdentifierSystem);
         encounter.ServiceType.Coding[0].Code.Should().Be(dbModel.SpecialityIdentifier);
         encounter.ServiceType.Coding[0].Display.Should().Be("Referral to dental service");
         encounter.Priority.Coding.Should().HaveCount(1);
-        encounter.Priority.Coding[0].System.Should().Be("dhcw/lttrPriority");
+        encounter.Priority.Coding[0].System.Should().Be(FhirConstants.LetterPrioritySystem);
         encounter.Priority.Coding[0].Code.Should().Be(dbModel.LetterPriority);
         encounter.Subject.Reference.Should().Be(patient!.FullUrl);
         encounter.Appointment.Should().HaveCount(1);
@@ -421,7 +423,7 @@ public class BundleCreatorTests
         var bundle = _sut.CreateBundle(dbModel);
 
         //Assert
-        var practitioner = GetEntryComponentByResource<Practitioner>(bundle, "ReceivingClinician");
+        var practitioner = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.ReceivingClinicianId);
         var patient = GetEntryComponentByResource<Patient>(bundle);
 
         var appointmentEntry = GetAppointmentByStatus(bundle, Appointment.AppointmentStatus.Waitlist);

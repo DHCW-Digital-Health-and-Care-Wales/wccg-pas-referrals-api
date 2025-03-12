@@ -9,7 +9,7 @@ namespace WCCG.PAS.Referrals.API.Controllers.v1;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]/[action]")]
 public class ReferralsController : ControllerBase
 {
     private readonly ILogger<ReferralsController> _logger;
@@ -21,7 +21,7 @@ public class ReferralsController : ControllerBase
         _referralService = referralService;
     }
 
-    [HttpPost("createReferral")]
+    [HttpPost]
     [SwaggerCreateReferralRequest]
     public async Task<IActionResult> CreateReferral()
     {
@@ -40,7 +40,7 @@ public class ReferralsController : ControllerBase
         };
     }
 
-    [HttpGet("getReferral/{referralId}")]
+    [HttpGet("{referralId}")]
     [SwaggerGetReferralRequest]
     public async Task<IActionResult> GetReferral(string referralId)
     {

@@ -41,7 +41,16 @@ public class SwaggerOperationFilter : IOperationFilter
             return;
         }
 
-        operation.Parameters = [];
+        operation.Parameters =
+        [
+            new OpenApiParameter
+            {
+                In = ParameterLocation.Path,
+                Name = "referralId",
+                Required = true,
+                Example = new OpenApiString(Guid.NewGuid().ToString())
+            }
+        ];
 
         AddGetReferralResponses(operation);
     }
@@ -108,6 +117,21 @@ public class SwaggerOperationFilter : IOperationFilter
                 }
             },
             {
+                "429", new OpenApiResponse
+                {
+                    Description = "Too Many Requests",
+                    Content = new Dictionary<string, OpenApiMediaType>
+                    {
+                        {
+                            MediaTypeNames.Application.Json, new OpenApiMediaType
+                            {
+                                Example = new OpenApiString(File.ReadAllText("Swagger/Examples/common-too-many-requests.json")),
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 "500", new OpenApiResponse
                 {
                     Description = "Internal Server Error",
@@ -155,6 +179,21 @@ public class SwaggerOperationFilter : IOperationFilter
                             MediaTypeNames.Application.Json, new OpenApiMediaType
                             {
                                 Example = new OpenApiString(File.ReadAllText("Swagger/Examples/create-referral-bad-request.json")),
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "429", new OpenApiResponse
+                {
+                    Description = "Too Many Requests",
+                    Content = new Dictionary<string, OpenApiMediaType>
+                    {
+                        {
+                            MediaTypeNames.Application.Json, new OpenApiMediaType
+                            {
+                                Example = new OpenApiString(File.ReadAllText("Swagger/Examples/common-too-many-requests.json")),
                             }
                         }
                     }

@@ -2,28 +2,29 @@ using System.Globalization;
 using Hl7.Fhir.Model;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
+using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
 
 namespace WCCG.PAS.Referrals.API.Helpers;
 
 public class BundleCreator : IBundleCreator
 {
-    private readonly Dictionary<string, RequestPriority> _requestPriorityDictionary = new(StringComparer.OrdinalIgnoreCase)
+    private readonly Dictionary<char, RequestPriority> _requestPriorityDictionary = new()
     {
-        { "U", RequestPriority.Urgent },
-        { "A", RequestPriority.Asap },
-        { "R", RequestPriority.Routine },
-        { "S", RequestPriority.Stat },
+        { 'U', RequestPriority.Urgent },
+        { 'A', RequestPriority.Asap },
+        { 'R', RequestPriority.Routine },
+        { 'S', RequestPriority.Stat },
     };
 
-    private readonly Dictionary<string, Timing.UnitsOfTime> _frequencyDictionary = new(StringComparer.OrdinalIgnoreCase)
+    private readonly Dictionary<char, Timing.UnitsOfTime> _frequencyDictionary = new()
     {
-        { "A", Timing.UnitsOfTime.A },
-        { "D", Timing.UnitsOfTime.D },
-        { "H", Timing.UnitsOfTime.H },
-        { "M", Timing.UnitsOfTime.Mo },
-        { "S", Timing.UnitsOfTime.S },
-        { "W", Timing.UnitsOfTime.Wk },
+        { 'A', Timing.UnitsOfTime.A },
+        { 'D', Timing.UnitsOfTime.D },
+        { 'H', Timing.UnitsOfTime.H },
+        { 'M', Timing.UnitsOfTime.Mo },
+        { 'S', Timing.UnitsOfTime.S },
+        { 'W', Timing.UnitsOfTime.Wk },
     };
 
     private readonly DateTimeOffset _currentDate = DateTimeOffset.UtcNow;
@@ -55,7 +56,7 @@ public class BundleCreator : IBundleCreator
         _referralDbModel = referralDbModel;
         return new Bundle
         {
-            Timestamp = new DateTimeOffset(DateTime.UtcNow),
+            Timestamp = _currentDate,
             Type = Bundle.BundleType.Message,
             Entry =
             [
@@ -85,7 +86,7 @@ public class BundleCreator : IBundleCreator
             {
                 Event = new Coding
                 {
-                    System = "https://fhir.nhs.uk/CodeSystem/message-events-bars",
+                    System = FhirConstants.EvenBarSystem,
                     Code = "servicerequest-request"
                 },
                 Destination =
@@ -93,13 +94,14 @@ public class BundleCreator : IBundleCreator
                     new MessageHeader.MessageDestinationComponent
                     {
                         Receiver = new ResourceReference($"urn:uuid:{_organizationDestinationId}"),
-                        Endpoint = _bundleCreationConfig.EReferralsBaseUrl + _bundleCreationConfig.EReferralsCreateReferralEndpoint
+                        Endpoint =
+                            $"{_bundleCreationConfig.EReferralsBaseUrl}{_bundleCreationConfig.EReferralsCreateReferralEndpoint}|0000000000"
                     }
                 ],
                 Sender = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}"),
                 Source = new MessageHeader.MessageSourceComponent { Endpoint = _bundleCreationConfig.DentalUiBaseUrl },
                 Reason = new CodeableConcept(
-                    system: "https://fhir.nhs.uk/CodeSystem/message-reason-bars",
+                    system: FhirConstants.ReasonBarSystem,
                     code: "new"
                 ),
                 Focus = [new ResourceReference($"urn:uuid:{_serviceRequestId}")],
@@ -120,20 +122,20 @@ public class BundleCreator : IBundleCreator
                 [
                     new Identifier
                     {
-                        System = "dhcw/LinkId",
+                        System = FhirConstants.LinkIdSystem,
                         Value = $"REF{_currentDate.ToString("yyyyMMddHHmm", CultureInfo.InvariantCulture)}"
                     },
 
                     new Identifier
                     {
-                        System = "ReferralUniqueId",
+                        System = FhirConstants.ReferralIdSystem,
                         Value = _referralDbModel!.ReferralId
                     }
                 ],
                 Category =
                 [
                     new CodeableConcept().Add(
-                        system: "https://fhir.nhs.uk/CodeSystem/message-category-servicerequest",
+                        system: FhirConstants.ServiceRequestCategorySystem,
                         code: "referral",
                         display: "Transfer of Care")
                 ],
@@ -143,18 +145,18 @@ public class BundleCreator : IBundleCreator
                 ],
                 Status = RequestStatus.Active,
                 Intent = RequestIntent.Plan,
-                Priority = _requestPriorityDictionary[_referralDbModel.Priority!],
+                Priority = _requestPriorityDictionary[char.ToUpperInvariant(_referralDbModel.Priority![0])],
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
                 AuthoredOn = _referralDbModel.CreationDate!,
                 Requester = new ResourceReference($"urn:uuid:{_practitionerRequestingPractitionerId}"),
                 Performer = [new ResourceReference($"urn:uuid:{_organizationDhaId}")],
                 OrderDetail =
                 [
-                    new CodeableConcept(system: "dhcw/WlistCodes", code: _referralDbModel.WaitingList!),
-                    new CodeableConcept(system: "dhcw/IntentReferValues", code: _referralDbModel.IntendedManagement!),
-                    new CodeableConcept(system: "dhcw/patientCategory", code: _referralDbModel.PatientCategory!),
-                    new CodeableConcept(system: "dhcw/Datonsys", code: _referralDbModel.HealthBoardReceiveDate!),
-                    new CodeableConcept(system: "dhcw/optom/hrf", code: _referralDbModel.HealthRiskFactor!)
+                    new CodeableConcept(system: FhirConstants.WlistCodesSystem, code: _referralDbModel.WaitingList!),
+                    new CodeableConcept(system: FhirConstants.IntentReferValuesSystem, code: _referralDbModel.IntendedManagement!),
+                    new CodeableConcept(system: FhirConstants.PatientCategorySystem, code: _referralDbModel.PatientCategory!),
+                    new CodeableConcept(system: FhirConstants.DatonsysSystem, code: _referralDbModel.HealthBoardReceiveDate!),
+                    new CodeableConcept(system: FhirConstants.RiskFactorSystem, code: _referralDbModel.HealthRiskFactor!)
                 ],
                 Encounter = new ResourceReference($"urn:uuid:{_encounterRequesterId}"),
                 Occurrence = new Timing
@@ -162,14 +164,15 @@ public class BundleCreator : IBundleCreator
                     Event = [_referralDbModel.FirstAppointmentDate],
                     Repeat = new Timing.RepeatComponent
                     {
-                        Period = decimal.Parse(_referralDbModel.RepeatPeriod![..1], CultureInfo.InvariantCulture),
-                        PeriodUnit = _frequencyDictionary[_referralDbModel.RepeatPeriod!.Substring(1, 1)]
+                        Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan(0, _referralDbModel.RepeatPeriod!.Length - 1),
+                            CultureInfo.InvariantCulture),
+                        PeriodUnit = _frequencyDictionary[char.ToUpperInvariant(_referralDbModel.RepeatPeriod!.Last())]
                     }
                 },
                 LocationCode =
                 [
                     new CodeableConcept(
-                        system: "https://fhir.nhs.uk/Id/ods-organization-code",
+                        system: FhirConstants.OdcOrganizationCodeSystem,
                         code: _referralDbModel.ReferralAssignedLocation!)
                 ],
                 Extension =
@@ -178,7 +181,7 @@ public class BundleCreator : IBundleCreator
                     {
                         Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-SourceOfServiceRequest",
                         Value = new CodeableConcept().Add(
-                            system: "http://snomed.info/sct",
+                            system: FhirConstants.SctSystem,
                             code: _referralDbModel.ReferrerSourceType!,
                             display: "General Dental Practice")
                     }
@@ -199,7 +202,7 @@ public class BundleCreator : IBundleCreator
                 [
                     new Identifier
                     {
-                        System = "https://fhir.nhs.uk/Id/nhs-number",
+                        System = FhirConstants.NhsNumberSystem,
                         Value = _referralDbModel!.NhsNumber,
                         Extension =
                         [
@@ -207,7 +210,7 @@ public class BundleCreator : IBundleCreator
                             {
                                 Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-NHSNumberVerificationStatus",
                                 Value = new CodeableConcept(
-                                    system: "https://fhir.hl7.org.uk/CodeSystem/UKCore-NHSNumberVerificationStatusEngland",
+                                    system: FhirConstants.VerificationStatusSystem,
                                     code: "01") // Temporary hardcode for PoC
                             }
                         ]
@@ -215,7 +218,7 @@ public class BundleCreator : IBundleCreator
 
                     new Identifier
                     {
-                        System = "https://fhir.hduhb.nhs.wales/Id/pas-identifier",
+                        System = FhirConstants.PasIdentifierSystem,
                         Value = _referralDbModel.CaseNumber!
                     }
                 ],
@@ -227,7 +230,7 @@ public class BundleCreator : IBundleCreator
                         Type = "Organization",
                         Identifier = new Identifier
                         {
-                            System = "https://fhir.nhs.uk/Id/ods-organization-code",
+                            System = FhirConstants.OdcOrganizationCodeSystem,
                             Value = _referralDbModel.PatientGpPracticeCode
                         }
                     },
@@ -237,7 +240,7 @@ public class BundleCreator : IBundleCreator
                         Type = "Practitioner",
                         Identifier = new Identifier
                         {
-                            System = "https://fhir.hl7.org.uk/Id/gmc-number",
+                            System = FhirConstants.GmcNumberSystem,
                             Value = _referralDbModel.PatientGpCode
                         }
                     }
@@ -253,13 +256,13 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_practitionerReceivingClinicianId}",
             Resource = new Practitioner
             {
-                Id = "ReceivingClinician",
+                Id = FhirConstants.ReceivingClinicianId,
                 Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner"] },
                 Identifier =
                 [
                     new Identifier
                     {
-                        System = "https://fhir.hl7.org.uk/Id/gdc-number",
+                        System = FhirConstants.GdcNumberSystem,
                         Value = _referralDbModel!.ReferralAssignedConsultant
                     }
                 ]
@@ -274,13 +277,13 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_practitionerRequestingPractitionerId}",
             Resource = new Practitioner
             {
-                Id = "RequestingPractitioner",
+                Id = FhirConstants.RequestingPractitionerId,
                 Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner"] },
                 Identifier =
                 [
                     new Identifier
                     {
-                        System = "https://fhir.hl7.org.uk/Id/gdc-number",
+                        System = FhirConstants.GdcNumberSystem,
                         Value = _referralDbModel!.Referrer
                     }
                 ]
@@ -295,13 +298,13 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_organizationDhaId}",
             Resource = new Organization
             {
-                Id = "DhaCode",
+                Id = FhirConstants.DhaCodeId,
                 Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
                 Identifier =
                 [
                     new Identifier
                     {
-                        System = "https://fhir.nhs.uk/Id/ods-organization-code",
+                        System = FhirConstants.OdcOrganizationCodeSystem,
                         Value = _referralDbModel!.PatientHealthBoardAreaCode
                     }
                 ]
@@ -316,13 +319,13 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_organizationReferringPracticeId}",
             Resource = new Organization
             {
-                Id = "ReferringPractice",
+                Id = FhirConstants.ReferringPracticeId,
                 Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
                 Identifier =
                 [
                     new Identifier
                     {
-                        System = "https://fhir.nhs.uk/Id/ods-organization-code",
+                        System = FhirConstants.OdcOrganizationCodeSystem,
                         Value = _referralDbModel!.ReferrerAddress
                     }
                 ]
@@ -337,13 +340,13 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_organizationDestinationId}",
             Resource = new Organization
             {
-                Id = "Destination",
+                Id = FhirConstants.DestinationId,
                 Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
                 Identifier =
                 [
                     new Identifier
                     {
-                        System = "https://fhir.nhs.uk/Id/ods-organization-code",
+                        System = FhirConstants.OdcOrganizationCodeSystem,
                         Value = "L5X6M" // Hardcode for Alpha
                     }
                 ]
@@ -362,15 +365,15 @@ public class BundleCreator : IBundleCreator
                 Status = Encounter.EncounterStatus.Finished,
                 // Values provided by Jake
                 Class = new Coding(
-                    system: "http://snomed.info/sct",
+                    system: FhirConstants.SctSystem,
                     code: "327121000000104",
                     display: "Referral to dental service"),
                 ServiceType = new CodeableConcept().Add(
-                    system: "dhcw/SPEC",
+                    system: FhirConstants.SpecialityIdentifierSystem,
                     code: _referralDbModel!.SpecialityIdentifier!,
                     display: "Referral to dental service"),
                 Priority = new CodeableConcept(
-                    system: "dhcw/lttrPriority",
+                    system: FhirConstants.LetterPrioritySystem,
                     code: _referralDbModel.LetterPriority!),
                 Appointment = [new ResourceReference($"urn:uuid:{_appointmentRequesterId}")]
             }
@@ -389,7 +392,7 @@ public class BundleCreator : IBundleCreator
                 [
                     new Extension
                     {
-                        Url = "BookingOrganization",
+                        Url = FhirConstants.BookingOrganisation,
                         Value = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}")
                     }
                 ],
@@ -435,15 +438,15 @@ public class BundleCreator : IBundleCreator
 
                 // Values provided by Jake
                 Class = new Coding(
-                    system: "http://snomed.info/sct",
+                    system: FhirConstants.SctSystem,
                     code: "373864002",
                     display: "outpatient"),
                 ServiceType = new CodeableConcept().Add(
-                    system: "dhcw/SPEC",
+                    system: FhirConstants.SpecialityIdentifierSystem,
                     code: _referralDbModel!.SpecialityIdentifier!,
                     display: "Referral to dental service"),
                 Priority = new CodeableConcept(
-                    system: "dhcw/lttrPriority",
+                    system: FhirConstants.LetterPrioritySystem,
                     code: _referralDbModel.LetterPriority!),
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
                 Appointment = [new ResourceReference($"urn:uuid:{_appointmentPlannedId}")]

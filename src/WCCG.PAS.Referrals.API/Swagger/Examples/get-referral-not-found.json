@@ -1,4 +1,4 @@
 {
-  "title": "Cosmos database failure",
+  "title": "CosmosDB: Document not found",
   "detail": "Referral with the provided ID was not found."
 }

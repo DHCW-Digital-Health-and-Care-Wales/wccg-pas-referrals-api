@@ -14,12 +14,13 @@ public class ResponseMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<ResponseMiddleware> _logger;
 
-    private readonly Dictionary<HttpStatusCode, string> _cosmosErrorDictionary = new()
+    private readonly Dictionary<HttpStatusCode, (string Title, string ErrorMessage)> _cosmosErrorDictionary = new()
     {
-        { HttpStatusCode.NotFound, "Referral with the provided ID was not found." },
-        { HttpStatusCode.Forbidden, "Access denied: Unable to connect to CosmosDB." },
-        { HttpStatusCode.BadRequest, "Bad request while calling CosmosDB." },
-        { HttpStatusCode.InternalServerError, "Unexpected error occurred while calling CosmosDB." }
+        { HttpStatusCode.NotFound, ("CosmosDB: Document not found", "Referral with the provided ID was not found.") },
+        {
+            HttpStatusCode.TooManyRequests, ("CosmosDB: Too many requests", "Too many requests have been made within the allowed time.")
+        },
+        { HttpStatusCode.InternalServerError, ("CosmosDb: Unexpected error", "Unexpected error occurred while calling CosmosDB.") }
     };
 
     public ResponseMiddleware(RequestDelegate next, ILogger<ResponseMiddleware> logger)
@@ -84,9 +85,11 @@ public class ResponseMiddleware
 
             case CosmosException cosmosException:
                 _logger.CosmosDatabaseFailure(cosmosException);
+
                 statusCode = cosmosException.StatusCode;
-                body.Title = "Cosmos database failure";
-                body.Detail = _cosmosErrorDictionary[statusCode];
+                var (title, errorMessage) = _cosmosErrorDictionary[statusCode];
+                body.Title = title;
+                body.Detail = errorMessage;
                 break;
 
             default:

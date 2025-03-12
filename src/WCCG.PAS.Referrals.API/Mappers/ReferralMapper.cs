@@ -64,7 +64,7 @@ public class ReferralMapper : IReferralMapper
     {
         var practitionerReference = ServiceRequest?.Requester?.Reference;
         var practitioner =
-            _bundle?.GetResourceByUrlWithCondition<Practitioner>(practitionerReference, p => p.Id, FhirConstants.RequestingPractitioner);
+            _bundle?.GetResourceByUrlWithCondition<Practitioner>(practitionerReference, p => p.Id, FhirConstants.RequestingPractitionerId);
 
         return practitioner?.Identifier.SelectWithCondition(x => x.System, FhirConstants.GmcNumberSystem)
             ?.Value;

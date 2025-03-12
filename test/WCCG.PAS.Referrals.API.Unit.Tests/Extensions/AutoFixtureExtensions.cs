@@ -38,8 +38,9 @@ public static class AutoFixtureExtensions
 
     public static AndConstraint<StringAssertions> BeValidFhirUrl(this StringAssertions stringAssertions)
     {
-        Guid guid;
         return stringAssertions.Subject.Should().StartWith("urn:uuid:")
-            .And.Subject.Split("urn:uuid:")[1].Should().Match(x => Guid.TryParse(x, out guid));
+            .And.Subject.Split("urn:uuid:")[1].Should().Match(x => IsValidGuid(x));
     }
+
+    private static bool IsValidGuid(string value) => Guid.TryParse(value, out _);
 }
