@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
 using WCCG.PAS.Referrals.API.Extensions;
@@ -22,12 +23,12 @@ public class ReferralMapper : IReferralMapper
     {
         _bundle = bundle;
 
-        var currentDate = DateTimeOffset.UtcNow.ToString("O");
+        var currentDate = DateTimeOffset.UtcNow;
         return new ReferralDbModel
         {
             CaseNumber = Guid.NewGuid().ToString(),
             NhsNumber = GetNhsNumber(),
-            CreationDate = ServiceRequest?.AuthoredOn,
+            CreationDate = GetCreationDate(),
             WaitingList = "O",
             IntendedManagement = "6",
             Referrer = GetReferrer(),
@@ -58,6 +59,13 @@ public class ReferralMapper : IReferralMapper
         return PatientFromServiceRequest?.Identifier
             ?.SelectWithCondition(x => x.System, FhirConstants.NhsNumberSystem)
             ?.Value;
+    }
+
+    private DateTimeOffset? GetCreationDate()
+    {
+        return ServiceRequest?.AuthoredOn is not null
+            ? PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(ServiceRequest.AuthoredOn)
+            : null;
     }
 
     private string? GetReferrer()
@@ -163,10 +171,14 @@ public class ReferralMapper : IReferralMapper
             : null;
     }
 
-    private string? GetFirstAppointmentDate()
+    private DateTimeOffset? GetFirstAppointmentDate()
     {
         var occurrence = ServiceRequest?.Occurrence as Timing;
-        return occurrence?.Event.FirstOrDefault();
+        var dateTime = occurrence?.Event.FirstOrDefault();
+
+        return dateTime is not null
+            ? PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(dateTime)
+            : null;
     }
 
     private string? GetHealthRiskFactor()

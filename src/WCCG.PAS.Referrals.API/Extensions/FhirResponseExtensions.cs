@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
 
@@ -15,7 +16,7 @@ public static class FhirResponseExtensions
 
         CreateOrUpdateCaseNumber(patient, dbModel.CaseNumber!);
         CreateOrUpdateReferralId(serviceRequest, dbModel.ReferralId!);
-        appointment.Created = dbModel.BookingDate;
+        appointment.Created = PrimitiveTypeConverter.ConvertTo<string>(dbModel.BookingDate!.Value);
     }
 
     private static void CreateOrUpdateCaseNumber(Patient patient, string caseNumberValue)

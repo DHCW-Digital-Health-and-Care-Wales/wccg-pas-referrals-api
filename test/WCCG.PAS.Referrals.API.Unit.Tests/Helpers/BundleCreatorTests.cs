@@ -1,7 +1,7 @@
-using System.Globalization;
 using AutoFixture;
 using FluentAssertions;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.Constants;
@@ -49,7 +49,7 @@ public class BundleCreatorTests
         messageHeader.Destination.Should().HaveCount(1);
         messageHeader.Destination[0].Receiver.Reference.Should().Be(destinationOrganization!.FullUrl);
         messageHeader.Destination[0].Endpoint.Should()
-            .Be($"{_config.EReferralsBaseUrl}{_config.EReferralsCreateReferralEndpoint}|0000000000");
+            .Be($"{_config.EReferralsBaseUrl}{_config.EReferralsCreateReferralEndpoint}|0123456789");
         messageHeader.Sender.Reference.Should().Be(referringPracticeOrganization!.FullUrl);
         messageHeader.Source.Endpoint.Should().Be(_config.DentalUiBaseUrl);
         messageHeader.Reason.Coding.Should().HaveCount(1);
@@ -65,7 +65,6 @@ public class BundleCreatorTests
     {
         //Arrange
         var dbModel = CreateValidReferralDbModel();
-        DateTimeOffset datePlaceholder;
 
         //Act
         var bundle = _sut.CreateBundle(dbModel);
@@ -84,13 +83,9 @@ public class BundleCreatorTests
         var serviceRequest = serviceRequestEntry.Resource as ServiceRequest;
         serviceRequest!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral");
-        serviceRequest.Identifier.Should().HaveCount(2);
-        serviceRequest.Identifier[0].System.Should().Be(FhirConstants.LinkIdSystem);
-        serviceRequest.Identifier[0].Value.Should().StartWith("REF")
-            .And.Subject.Split("REF")[1].Should().Match(x =>
-                DateTimeOffset.TryParseExact(x, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out datePlaceholder));
-        serviceRequest.Identifier[1].System.Should().Be(FhirConstants.ReferralIdSystem);
-        serviceRequest.Identifier[1].Value.Should().Be(dbModel.ReferralId);
+        serviceRequest.Identifier.Should().HaveCount(1);
+        serviceRequest.Identifier[0].System.Should().Be(FhirConstants.ReferralIdSystem);
+        serviceRequest.Identifier[0].Value.Should().Be(dbModel.ReferralId);
         serviceRequest.Category.Should().HaveCount(1);
         serviceRequest.Category[0].Coding.Should().HaveCount(1);
         serviceRequest.Category[0].Coding[0].System.Should().Be(FhirConstants.ServiceRequestCategorySystem);
@@ -102,7 +97,7 @@ public class BundleCreatorTests
         serviceRequest.Intent.Should().Be(RequestIntent.Plan);
         serviceRequest.Priority.Should().Be(RequestPriority.Routine);
         serviceRequest.Subject.Reference.Should().Be(patient!.FullUrl);
-        serviceRequest.AuthoredOn.Should().Be(dbModel.CreationDate);
+        serviceRequest.AuthoredOn.Should().Be(PrimitiveTypeConverter.ConvertTo<string>(dbModel.CreationDate!.Value));
         serviceRequest.Requester.Reference.Should().Be(referringPractitioner!.FullUrl);
         serviceRequest.Performer.Should().HaveCount(1);
         serviceRequest.Performer[0].Reference.Should().Be(dhaOrganization!.FullUrl);
@@ -118,13 +113,15 @@ public class BundleCreatorTests
         serviceRequest.OrderDetail[2].Coding[0].Code.Should().Be(dbModel.PatientCategory);
         serviceRequest.OrderDetail[3].Coding.Should().HaveCount(1);
         serviceRequest.OrderDetail[3].Coding[0].System.Should().Be(FhirConstants.DatonsysSystem);
-        serviceRequest.OrderDetail[3].Coding[0].Code.Should().Be(dbModel.HealthBoardReceiveDate);
+        serviceRequest.OrderDetail[3].Coding[0].Code.Should()
+            .Be(PrimitiveTypeConverter.ConvertTo<string>(dbModel.HealthBoardReceiveDate!.Value));
         serviceRequest.OrderDetail[4].Coding.Should().HaveCount(1);
         serviceRequest.OrderDetail[4].Coding[0].System.Should().Be(FhirConstants.RiskFactorSystem);
         serviceRequest.OrderDetail[4].Coding[0].Code.Should().Be(dbModel.HealthRiskFactor);
         serviceRequest.Encounter.Reference.Should().Be(requesterEncounter!.FullUrl);
         (serviceRequest.Occurrence as Timing)!.Event.Should().HaveCount(1);
-        (serviceRequest.Occurrence as Timing)!.Event.First().Should().Be(dbModel.FirstAppointmentDate);
+        (serviceRequest.Occurrence as Timing)!.Event.First().Should()
+            .Be(PrimitiveTypeConverter.ConvertTo<string>(dbModel.FirstAppointmentDate!.Value));
         (serviceRequest.Occurrence as Timing)!.Repeat.Period.Should().Be(6);
         (serviceRequest.Occurrence as Timing)!.Repeat.PeriodUnit.Should().Be(Timing.UnitsOfTime.D);
         serviceRequest.LocationCode.Should().HaveCount(1);
@@ -345,7 +342,7 @@ public class BundleCreatorTests
         appointment.Extension.Should().HaveCount(1);
         appointment.Extension[0].Url.Should().Be(FhirConstants.BookingOrganisation);
         (appointment.Extension[0].Value as ResourceReference)!.Reference.Should().Be(organization!.FullUrl);
-        appointment.Created.Should().Be(dbModel.BookingDate);
+        appointment.Created.Should().Be(PrimitiveTypeConverter.ConvertTo<string>(dbModel.BookingDate!.Value));
         appointment.Participant.Should().HaveCount(1);
         appointment.Participant[0].Actor.Reference.Should().Be(patient!.FullUrl);
         appointment.Participant[0].Status.Should().Be(ParticipationStatus.Accepted);
@@ -417,7 +414,6 @@ public class BundleCreatorTests
     {
         //Arrange
         var dbModel = CreateValidReferralDbModel();
-        DateTimeOffset datePlaceholder;
 
         //Act
         var bundle = _sut.CreateBundle(dbModel);
@@ -433,8 +429,7 @@ public class BundleCreatorTests
         var appointment = appointmentEntry.Resource as Appointment;
         appointment!.Meta.Profile.Should().HaveCount(1)
             .And.Contain("https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment");
-        appointment.Created.Should().Match(x =>
-            DateTimeOffset.TryParseExact(x, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out datePlaceholder));
+        appointment.Created.Should().Match(x => FhirDateTime.IsValidValue(x));
         appointment.Participant.Should().HaveCount(2);
         appointment.Participant[0].Actor.Reference.Should().Be(patient!.FullUrl);
         appointment.Participant[0].Status.Should().Be(ParticipationStatus.Accepted);

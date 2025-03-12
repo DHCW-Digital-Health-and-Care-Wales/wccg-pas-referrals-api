@@ -4,6 +4,7 @@ using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Moq;
 using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
@@ -27,6 +28,11 @@ public class ReferralServiceTests
     public async Task CreateReferralAsyncShouldMapFromBundle()
     {
         //Arrange
+        var referralDbModel = _fixture.Create<ReferralDbModel>();
+
+        _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
+            .Returns(referralDbModel);
+
         var sut = CreateReferralService();
 
         //Act
@@ -80,7 +86,7 @@ public class ReferralServiceTests
     {
         //Arrange
         var referralDbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.BookingDate, DateTimeOffset.UtcNow.ToString("O"))
+            .With(x => x.BookingDate, DateTimeOffset.UtcNow)
             .Create();
 
         _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
@@ -209,12 +215,12 @@ public class ReferralServiceTests
             !.Value;
     }
 
-    private static string GetBookingDateFromBundle(Bundle bundle)
+    private static DateTimeOffset GetBookingDateFromBundle(Bundle bundle)
     {
         var serviceRequest = bundle.GetResourceByType<ServiceRequest>()!;
         var encounter = bundle.GetResourceByUrl<Encounter>(serviceRequest.Encounter.Reference)!;
         var appointment = bundle.GetResourceByUrl<Appointment>(encounter.Appointment.FirstOrDefault()!.Reference)!;
-        return appointment.Created;
+        return PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(appointment.Created);
     }
 
     private ReferralService CreateReferralService()

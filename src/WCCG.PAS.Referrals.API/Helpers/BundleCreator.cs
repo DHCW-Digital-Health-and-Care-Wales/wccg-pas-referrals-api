@@ -1,9 +1,13 @@
 using System.Globalization;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
+
+// ReSharper disable ArrangeObjectCreationWhenTypeEvident
+// ReSharper disable UseCollectionExpression
 
 namespace WCCG.PAS.Referrals.API.Helpers;
 
@@ -58,8 +62,8 @@ public class BundleCreator : IBundleCreator
         {
             Timestamp = _currentDate,
             Type = Bundle.BundleType.Message,
-            Entry =
-            [
+            Entry = new List<Bundle.EntryComponent>
+            {
                 GenerateMessageHeader(),
                 GenerateServiceRequest(),
                 GeneratePatient(),
@@ -73,7 +77,7 @@ public class BundleCreator : IBundleCreator
                 GenerateCarePlan(),
                 GenerateEncounter_Planned(),
                 GenerateAppointment_Planned()
-            ]
+            }
         };
     }
 
@@ -89,22 +93,22 @@ public class BundleCreator : IBundleCreator
                     System = FhirConstants.EvenBarSystem,
                     Code = "servicerequest-request"
                 },
-                Destination =
-                [
+                Destination = new List<MessageHeader.MessageDestinationComponent>
+                {
                     new MessageHeader.MessageDestinationComponent
                     {
                         Receiver = new ResourceReference($"urn:uuid:{_organizationDestinationId}"),
                         Endpoint =
-                            $"{_bundleCreationConfig.EReferralsBaseUrl}{_bundleCreationConfig.EReferralsCreateReferralEndpoint}|0000000000"
+                            $"{_bundleCreationConfig.EReferralsBaseUrl}{_bundleCreationConfig.EReferralsCreateReferralEndpoint}|0123456789"
                     }
-                ],
+                },
                 Sender = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}"),
                 Source = new MessageHeader.MessageSourceComponent { Endpoint = _bundleCreationConfig.DentalUiBaseUrl },
                 Reason = new CodeableConcept(
                     system: FhirConstants.ReasonBarSystem,
                     code: "new"
                 ),
-                Focus = [new ResourceReference($"urn:uuid:{_serviceRequestId}")],
+                Focus = new List<ResourceReference> { new ResourceReference($"urn:uuid:{_serviceRequestId}") },
                 Definition = "https://fhir.nhs.uk/MessageDefinition/bars-message-servicerequest-request-referral"
             }
         };
@@ -117,51 +121,49 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_serviceRequestId}",
             Resource = new ServiceRequest
             {
-                Meta = new Meta { Profile = ["https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral"] },
-                Identifier =
-                [
-                    new Identifier
-                    {
-                        System = FhirConstants.LinkIdSystem,
-                        Value = $"REF{_currentDate.ToString("yyyyMMddHHmm", CultureInfo.InvariantCulture)}"
-                    },
-
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral" }.AsReadOnly()
+                },
+                Identifier = new List<Identifier>
+                {
                     new Identifier
                     {
                         System = FhirConstants.ReferralIdSystem,
                         Value = _referralDbModel!.ReferralId
                     }
-                ],
-                Category =
-                [
+                },
+                Category = new List<CodeableConcept>
+                {
                     new CodeableConcept().Add(
                         system: FhirConstants.ServiceRequestCategorySystem,
                         code: "referral",
                         display: "Transfer of Care")
-                ],
-                BasedOn =
-                [
-                    new ResourceReference($"urn:uuid:{_carePlanId}")
-                ],
+                },
+                BasedOn = new List<ResourceReference> { new ResourceReference($"urn:uuid:{_carePlanId}") },
                 Status = RequestStatus.Active,
                 Intent = RequestIntent.Plan,
                 Priority = _requestPriorityDictionary[char.ToUpperInvariant(_referralDbModel.Priority![0])],
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
-                AuthoredOn = _referralDbModel.CreationDate!,
+                AuthoredOn = PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.CreationDate!.Value),
                 Requester = new ResourceReference($"urn:uuid:{_practitionerRequestingPractitionerId}"),
-                Performer = [new ResourceReference($"urn:uuid:{_organizationDhaId}")],
+                Performer = new List<ResourceReference> { new ResourceReference($"urn:uuid:{_organizationDhaId}") },
                 OrderDetail =
-                [
-                    new CodeableConcept(system: FhirConstants.WlistCodesSystem, code: _referralDbModel.WaitingList!),
-                    new CodeableConcept(system: FhirConstants.IntentReferValuesSystem, code: _referralDbModel.IntendedManagement!),
-                    new CodeableConcept(system: FhirConstants.PatientCategorySystem, code: _referralDbModel.PatientCategory!),
-                    new CodeableConcept(system: FhirConstants.DatonsysSystem, code: _referralDbModel.HealthBoardReceiveDate!),
-                    new CodeableConcept(system: FhirConstants.RiskFactorSystem, code: _referralDbModel.HealthRiskFactor!)
-                ],
+                    new List<CodeableConcept>
+                    {
+                        new CodeableConcept(system: FhirConstants.WlistCodesSystem, code: _referralDbModel.WaitingList!),
+                        new CodeableConcept(system: FhirConstants.IntentReferValuesSystem, code: _referralDbModel.IntendedManagement!),
+                        new CodeableConcept(system: FhirConstants.PatientCategorySystem, code: _referralDbModel.PatientCategory!),
+                        new CodeableConcept(system: FhirConstants.DatonsysSystem,
+                            code: PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.HealthBoardReceiveDate!.Value)),
+                        new CodeableConcept(system: FhirConstants.RiskFactorSystem, code: _referralDbModel.HealthRiskFactor!)
+                    },
                 Encounter = new ResourceReference($"urn:uuid:{_encounterRequesterId}"),
                 Occurrence = new Timing
                 {
-                    Event = [_referralDbModel.FirstAppointmentDate],
+                    Event = new List<string> { PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.FirstAppointmentDate!.Value) }
+                        .AsReadOnly(),
                     Repeat = new Timing.RepeatComponent
                     {
                         Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan(0, _referralDbModel.RepeatPeriod!.Length - 1),
@@ -170,22 +172,24 @@ public class BundleCreator : IBundleCreator
                     }
                 },
                 LocationCode =
-                [
-                    new CodeableConcept(
-                        system: FhirConstants.OdcOrganizationCodeSystem,
-                        code: _referralDbModel.ReferralAssignedLocation!)
-                ],
-                Extension =
-                [
-                    new Extension
+                    new List<CodeableConcept>
                     {
-                        Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-SourceOfServiceRequest",
-                        Value = new CodeableConcept().Add(
-                            system: FhirConstants.SctSystem,
-                            code: _referralDbModel.ReferrerSourceType!,
-                            display: "General Dental Practice")
+                        new CodeableConcept(
+                            system: FhirConstants.OdcOrganizationCodeSystem,
+                            code: _referralDbModel.ReferralAssignedLocation!)
+                    },
+                Extension =
+                    new List<Extension>
+                    {
+                        new Extension
+                        {
+                            Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-SourceOfServiceRequest",
+                            Value = new CodeableConcept().Add(
+                                system: FhirConstants.SctSystem,
+                                code: _referralDbModel.ReferrerSourceType!,
+                                display: "General Dental Practice")
+                        }
                     }
-                ]
             }
         };
     }
@@ -197,54 +201,59 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_patientId}",
             Resource = new Patient
             {
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Patient"] },
+                Meta = new Meta
+                {
+                    Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Patient" }
+                        .AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.NhsNumberSystem,
-                        Value = _referralDbModel!.NhsNumber,
-                        Extension =
-                        [
-                            new Extension
-                            {
-                                Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-NHSNumberVerificationStatus",
-                                Value = new CodeableConcept(
-                                    system: FhirConstants.VerificationStatusSystem,
-                                    code: "01") // Temporary hardcode for PoC
-                            }
-                        ]
+                        new Identifier
+                        {
+                            System = FhirConstants.NhsNumberSystem,
+                            Value = _referralDbModel!.NhsNumber,
+                            Extension =
+                                new List<Extension>
+                                {
+                                    new Extension
+                                    {
+                                        Url = "https://fhir.hl7.org.uk/StructureDefinition/Extension-UKCore-NHSNumberVerificationStatus",
+                                        Value = new CodeableConcept(
+                                            system: FhirConstants.VerificationStatusSystem,
+                                            code: "01") // Temporary hardcode for PoC
+                                    }
+                                }
+                        },
+                        new Identifier
+                        {
+                            System = FhirConstants.PasIdentifierSystem,
+                            Value = _referralDbModel.CaseNumber!
+                        }
                     },
-
-                    new Identifier
-                    {
-                        System = FhirConstants.PasIdentifierSystem,
-                        Value = _referralDbModel.CaseNumber!
-                    }
-                ],
-                Address = [new Address { PostalCode = _referralDbModel.PatientPostcode }],
+                Address = new List<Address> { new Address { PostalCode = _referralDbModel.PatientPostcode } },
                 GeneralPractitioner =
-                [
-                    new ResourceReference
+                    new List<ResourceReference>
                     {
-                        Type = "Organization",
-                        Identifier = new Identifier
+                        new ResourceReference
                         {
-                            System = FhirConstants.OdcOrganizationCodeSystem,
-                            Value = _referralDbModel.PatientGpPracticeCode
-                        }
-                    },
-
-                    new ResourceReference
-                    {
-                        Type = "Practitioner",
-                        Identifier = new Identifier
+                            Type = "Organization",
+                            Identifier = new Identifier
+                            {
+                                System = FhirConstants.OdcOrganizationCodeSystem,
+                                Value = _referralDbModel.PatientGpPracticeCode
+                            }
+                        },
+                        new ResourceReference
                         {
-                            System = FhirConstants.GmcNumberSystem,
-                            Value = _referralDbModel.PatientGpCode
+                            Type = "Practitioner",
+                            Identifier = new Identifier
+                            {
+                                System = FhirConstants.GmcNumberSystem,
+                                Value = _referralDbModel.PatientGpCode
+                            }
                         }
                     }
-                ]
             }
         };
     }
@@ -257,15 +266,20 @@ public class BundleCreator : IBundleCreator
             Resource = new Practitioner
             {
                 Id = FhirConstants.ReceivingClinicianId,
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }.AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.GdcNumberSystem,
-                        Value = _referralDbModel!.ReferralAssignedConsultant
+                        new Identifier
+                        {
+                            System = FhirConstants.GdcNumberSystem,
+                            Value = _referralDbModel!.ReferralAssignedConsultant
+                        }
                     }
-                ]
             }
         };
     }
@@ -278,15 +292,20 @@ public class BundleCreator : IBundleCreator
             Resource = new Practitioner
             {
                 Id = FhirConstants.RequestingPractitionerId,
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }.AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.GdcNumberSystem,
-                        Value = _referralDbModel!.Referrer
+                        new Identifier
+                        {
+                            System = FhirConstants.GdcNumberSystem,
+                            Value = _referralDbModel!.Referrer
+                        }
                     }
-                ]
             }
         };
     }
@@ -299,15 +318,20 @@ public class BundleCreator : IBundleCreator
             Resource = new Organization
             {
                 Id = FhirConstants.DhaCodeId,
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.OdcOrganizationCodeSystem,
-                        Value = _referralDbModel!.PatientHealthBoardAreaCode
+                        new Identifier
+                        {
+                            System = FhirConstants.OdcOrganizationCodeSystem,
+                            Value = _referralDbModel!.PatientHealthBoardAreaCode
+                        }
                     }
-                ]
             }
         };
     }
@@ -320,15 +344,20 @@ public class BundleCreator : IBundleCreator
             Resource = new Organization
             {
                 Id = FhirConstants.ReferringPracticeId,
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.OdcOrganizationCodeSystem,
-                        Value = _referralDbModel!.ReferrerAddress
+                        new Identifier
+                        {
+                            System = FhirConstants.OdcOrganizationCodeSystem,
+                            Value = _referralDbModel!.ReferrerAddress
+                        }
                     }
-                ]
             }
         };
     }
@@ -341,15 +370,20 @@ public class BundleCreator : IBundleCreator
             Resource = new Organization
             {
                 Id = FhirConstants.DestinationId,
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                },
                 Identifier =
-                [
-                    new Identifier
+                    new List<Identifier>
                     {
-                        System = FhirConstants.OdcOrganizationCodeSystem,
-                        Value = "L5X6M" // Hardcode for Alpha
+                        new Identifier
+                        {
+                            System = FhirConstants.OdcOrganizationCodeSystem,
+                            Value = "L5X6M" // Hardcode for Alpha
+                        }
                     }
-                ]
             }
         };
     }
@@ -361,7 +395,11 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_encounterRequesterId}",
             Resource = new Encounter
             {
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter"] },
+                Meta = new Meta
+                {
+                    Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter" }
+                        .AsReadOnly()
+                },
                 Status = Encounter.EncounterStatus.Finished,
                 // Values provided by Jake
                 Class = new Coding(
@@ -375,7 +413,7 @@ public class BundleCreator : IBundleCreator
                 Priority = new CodeableConcept(
                     system: FhirConstants.LetterPrioritySystem,
                     code: _referralDbModel.LetterPriority!),
-                Appointment = [new ResourceReference($"urn:uuid:{_appointmentRequesterId}")]
+                Appointment = new List<ResourceReference> { new ResourceReference($"urn:uuid:{_appointmentRequesterId}") }
             }
         };
     }
@@ -387,25 +425,31 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_appointmentRequesterId}",
             Resource = new Appointment
             {
-                Meta = new Meta { Profile = ["https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }.AsReadOnly()
+                },
                 Extension =
-                [
-                    new Extension
+                    new List<Extension>
                     {
-                        Url = FhirConstants.BookingOrganisation,
-                        Value = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}")
-                    }
-                ],
+                        new Extension
+                        {
+                            Url = FhirConstants.BookingOrganisation,
+                            Value = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}")
+                        }
+                    },
                 Status = Appointment.AppointmentStatus.Fulfilled,
-                Created = _referralDbModel!.BookingDate,
+                Created = PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel!.BookingDate!.Value),
                 Participant =
-                [
-                    new Appointment.ParticipantComponent
+                    new List<Appointment.ParticipantComponent>
                     {
-                        Actor = new ResourceReference($"urn:uuid:{_patientId}"),
-                        Status = ParticipationStatus.Accepted
+                        new Appointment.ParticipantComponent
+                        {
+                            Actor = new ResourceReference($"urn:uuid:{_patientId}"),
+                            Status = ParticipationStatus.Accepted
+                        }
                     }
-                ]
             }
         };
     }
@@ -417,7 +461,8 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_carePlanId}",
             Resource = new CarePlan
             {
-                Meta = new Meta { Profile = ["https://fhir.hl7.org.uk/StructureDefinition/UKCore-CarePlan"] },
+                Meta =
+                    new Meta { Profile = new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-CarePlan" }.AsReadOnly() },
                 Status = RequestStatus.Completed,
                 Intent = CarePlan.CarePlanIntent.Plan,
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
@@ -433,7 +478,11 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_encounterPlannedId}",
             Resource = new Encounter
             {
-                Meta = new Meta { Profile = ["https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter"] },
+                Meta = new Meta
+                {
+                    Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter" }
+                        .AsReadOnly()
+                },
                 Status = Encounter.EncounterStatus.Planned,
 
                 // Values provided by Jake
@@ -449,7 +498,7 @@ public class BundleCreator : IBundleCreator
                     system: FhirConstants.LetterPrioritySystem,
                     code: _referralDbModel.LetterPriority!),
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
-                Appointment = [new ResourceReference($"urn:uuid:{_appointmentPlannedId}")]
+                Appointment = new List<ResourceReference> { new ResourceReference($"urn:uuid:{_appointmentPlannedId}") }
             }
         };
     }
@@ -461,23 +510,27 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_appointmentPlannedId}",
             Resource = new Appointment
             {
-                Meta = new Meta { Profile = ["https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment"] },
+                Meta = new Meta
+                {
+                    Profile =
+                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }.AsReadOnly()
+                },
                 Status = Appointment.AppointmentStatus.Waitlist,
-                Created = _currentDate.ToString("O"),
+                Created = PrimitiveTypeConverter.ConvertTo<string>(_currentDate),
                 Participant =
-                [
-                    new Appointment.ParticipantComponent
+                    new List<Appointment.ParticipantComponent>
                     {
-                        Actor = new ResourceReference($"urn:uuid:{_patientId}"),
-                        Status = ParticipationStatus.Accepted
-                    },
-
-                    new Appointment.ParticipantComponent
-                    {
-                        Actor = new ResourceReference($"urn:uuid:{_practitionerReceivingClinicianId}"),
-                        Status = ParticipationStatus.Accepted
+                        new Appointment.ParticipantComponent
+                        {
+                            Actor = new ResourceReference($"urn:uuid:{_patientId}"),
+                            Status = ParticipationStatus.Accepted
+                        },
+                        new Appointment.ParticipantComponent
+                        {
+                            Actor = new ResourceReference($"urn:uuid:{_practitionerReceivingClinicianId}"),
+                            Status = ParticipationStatus.Accepted
+                        }
                     }
-                ]
             }
         };
     }

@@ -1,5 +1,4 @@
 using FluentValidation;
-using Hl7.Fhir.Model;
 using WCCG.PAS.Referrals.API.DbModels;
 
 namespace WCCG.PAS.Referrals.API.Validators;
@@ -20,8 +19,7 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
             .MaximumLength(17);
 
         RuleFor(x => x.CreationDate)
-            .NotEmpty()
-            .Must(BeValidDate);
+            .NotEmpty();
 
         RuleFor(x => x.WaitingList)
             .NotEmpty()
@@ -64,8 +62,7 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
             .MaximumLength(1);
 
         RuleFor(x => x.HealthBoardReceiveDate)
-            .NotEmpty()
-            .Must(BeValidDate);
+            .NotEmpty();
 
         RuleFor(x => x.ReferralAssignedConsultant)
             .NotEmpty()
@@ -84,12 +81,10 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
             .MaximumLength(1);
 
         RuleFor(x => x.BookingDate)
-            .NotEmpty()
-            .Must(BeValidDate);
+            .NotEmpty();
 
         RuleFor(x => x.TreatmentDate)
-            .NotEmpty()
-            .Must(BeValidDate);
+            .NotEmpty();
 
         RuleFor(x => x.SpecialityIdentifier)
             .NotEmpty()
@@ -100,8 +95,7 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
             .MaximumLength(3);
 
         RuleFor(x => x.FirstAppointmentDate)
-            .NotEmpty()
-            .Must(BeValidDate);
+            .NotEmpty();
 
         RuleFor(x => x.HealthRiskFactor)
             .NotEmpty()
@@ -115,10 +109,5 @@ public class ReferralDbModelValidator : AbstractValidator<ReferralDbModel>
     private static bool BeValidGuid(string? value)
     {
         return Guid.TryParse(value, out _);
-    }
-
-    private static bool BeValidDate(string? value)
-    {
-        return FhirDateTime.IsValidValue(value!);
     }
 }
