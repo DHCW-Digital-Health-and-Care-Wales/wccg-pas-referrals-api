@@ -15,7 +15,7 @@ using WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
 
 namespace WCCG.PAS.Referrals.API.Integration.Tests.Middleware;
 
-public class ExceptionHandlingMiddlewareTests
+public class ResponseMiddlewareTests
 {
     private readonly IFixture _fixture = new Fixture().WithCustomizations();
 
@@ -70,11 +70,14 @@ public class ExceptionHandlingMiddlewareTests
         problemDetails.Extensions["validationErrors"]?.ToString().Should().BeEquivalentTo(expectedExtensions);
     }
 
-    [Fact]
-    public async Task ShouldHandleCosmosException()
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound, "CosmosDB: Document not found", "Referral with the provided ID was not found.")]
+    [InlineData(HttpStatusCode.TooManyRequests, "CosmosDB: Too many requests", "Too many requests have been made within the allowed time.")]
+    [InlineData(HttpStatusCode.InternalServerError, "CosmosDb: Unexpected error", "Unexpected error occurred while calling CosmosDB.")]
+    public async Task ShouldHandleCosmosException(HttpStatusCode code, string title, string message)
     {
         //Arrange
-        var exception = _fixture.Create<CosmosException>();
+        var exception = new CosmosException("", code, 0, "", 0);
         var host = StartHost(exception);
 
         //Act
@@ -83,7 +86,8 @@ public class ExceptionHandlingMiddlewareTests
         //Assert
         response.StatusCode.Should().Be(exception.StatusCode);
         var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(await response.Content.ReadAsStringAsync())!;
-        problemDetails.Detail.Should().Be(exception.Message);
+        problemDetails.Title.Should().Be(title);
+        problemDetails.Detail.Should().Be(message);
     }
 
     [Fact]
@@ -105,6 +109,6 @@ public class ExceptionHandlingMiddlewareTests
     private static IHost StartHost(Exception exception)
     {
         return HostProvider.StartHostWithEndpoint(_ => throw exception,
-            configureApp: app => app.UseMiddleware<ExceptionHandlingMiddleware>());
+            configureApp: app => app.UseMiddleware<ResponseMiddleware>());
     }
 }

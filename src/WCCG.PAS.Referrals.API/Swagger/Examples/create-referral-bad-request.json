@@ -1,0 +1,4 @@
+{
+  "title": "Invalid JSON",
+  "detail": "'1' is an invalid start of a property name. Expected a '\"'. Path: $ | LineNumber: 1 | BytePositionInLine: 27."
+}

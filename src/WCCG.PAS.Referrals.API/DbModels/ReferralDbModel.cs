@@ -14,7 +14,7 @@ public class ReferralDbModel
     public required string? NhsNumber { get; set; }
 
     [JsonProperty("datRef")]
-    public required string? CreationDate { get; set; }
+    public required DateTimeOffset? CreationDate { get; set; }
 
     [JsonProperty("wlist")]
     public required string? WaitingList { get; set; }
@@ -47,7 +47,7 @@ public class ReferralDbModel
     public required string? LetterPriority { get; set; }
 
     [JsonProperty("datonsys")]
-    public required string? HealthBoardReceiveDate { get; set; }
+    public required DateTimeOffset? HealthBoardReceiveDate { get; set; }
 
     [JsonProperty("cons")]
     public required string? ReferralAssignedConsultant { get; set; }
@@ -62,10 +62,10 @@ public class ReferralDbModel
     public required string? Priority { get; set; }
 
     [JsonProperty("dateBooked")]
-    public required string? BookingDate { get; set; }
+    public required DateTimeOffset? BookingDate { get; set; }
 
     [JsonProperty("trtDate")]
-    public required string? TreatmentDate { get; set; }
+    public required DateTimeOffset? TreatmentDate { get; set; }
 
     [JsonProperty("spec")]
     public required string? SpecialityIdentifier { get; set; }
@@ -74,7 +74,7 @@ public class ReferralDbModel
     public required string? RepeatPeriod { get; set; }
 
     [JsonProperty("firstApproxAppt")]
-    public required string? FirstAppointmentDate { get; set; }
+    public required DateTimeOffset? FirstAppointmentDate { get; set; }
 
     [JsonProperty("healthRiskFactor")]
     public required string? HealthRiskFactor { get; set; }

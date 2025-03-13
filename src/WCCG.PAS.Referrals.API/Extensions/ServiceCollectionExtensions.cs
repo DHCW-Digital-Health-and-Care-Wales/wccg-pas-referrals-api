@@ -8,6 +8,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.DbModels;
+using WCCG.PAS.Referrals.API.Helpers;
 using WCCG.PAS.Referrals.API.Mappers;
 using WCCG.PAS.Referrals.API.Repositories;
 using WCCG.PAS.Referrals.API.Services;
@@ -91,7 +92,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IReferralMapper, ReferralMapper>();
         services.AddScoped<IReferralService, ReferralService>();
-        services.AddScoped<IFhirBundleSerializer, FhirBundleJsonSerializer>();
+        services.AddScoped<IBundleCreator, BundleCreator>();
     }
 
     public static void AddValidators(this IServiceCollection services)

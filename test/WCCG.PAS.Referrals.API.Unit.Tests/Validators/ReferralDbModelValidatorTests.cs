@@ -1,6 +1,7 @@
 using AutoFixture;
 using FluentValidation;
 using FluentValidation.TestHelper;
+using Hl7.Fhir.Serialization;
 using WCCG.PAS.Referrals.API.DbModels;
 using WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
 using WCCG.PAS.Referrals.API.Validators;
@@ -86,15 +87,12 @@ public class ReferralDbModelValidatorTests
         validationResult.ShouldNotHaveValidationErrorFor(x => x.NhsNumber);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("invalid-date")]
-    public void ShouldContainErrorWhenCreationDateInvalid(string? creationDate)
+    [Fact]
+    public void ShouldContainErrorWhenCreationDateInvalid()
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.CreationDate, creationDate)
+            .With(x => x.CreationDate, (DateTimeOffset?)null)
             .Create();
 
         //Act
@@ -111,7 +109,7 @@ public class ReferralDbModelValidatorTests
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.CreationDate, creationDate)
+            .With(x => x.CreationDate, PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(creationDate))
             .Create();
 
         //Act
@@ -450,15 +448,12 @@ public class ReferralDbModelValidatorTests
         validationResult.ShouldNotHaveValidationErrorFor(x => x.LetterPriority);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("invalid-date")]
-    public void ShouldContainErrorWhenHealthBoardReceiveDateInvalid(string? healthBoardReceiveDate)
+    [Fact]
+    public void ShouldContainErrorWhenHealthBoardReceiveDateInvalid()
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.HealthBoardReceiveDate, healthBoardReceiveDate)
+            .With(x => x.HealthBoardReceiveDate, (DateTimeOffset?)null)
             .Create();
 
         //Act
@@ -475,7 +470,7 @@ public class ReferralDbModelValidatorTests
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.HealthBoardReceiveDate, healthBoardReceiveDate)
+            .With(x => x.HealthBoardReceiveDate, PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(healthBoardReceiveDate))
             .Create();
 
         //Act
@@ -617,15 +612,12 @@ public class ReferralDbModelValidatorTests
         validationResult.ShouldNotHaveValidationErrorFor(x => x.Priority);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("invalid-date")]
-    public void ShouldContainErrorWhenBookingDateInvalid(string? bookingDate)
+    [Fact]
+    public void ShouldContainErrorWhenBookingDateInvalid()
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.BookingDate, bookingDate)
+            .With(x => x.BookingDate, (DateTimeOffset?)null)
             .Create();
 
         //Act
@@ -642,7 +634,7 @@ public class ReferralDbModelValidatorTests
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.BookingDate, bookingDate)
+            .With(x => x.BookingDate, PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(bookingDate))
             .Create();
 
         //Act
@@ -652,15 +644,12 @@ public class ReferralDbModelValidatorTests
         validationResult.ShouldNotHaveValidationErrorFor(x => x.BookingDate);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("invalid-date")]
-    public void ShouldContainErrorWhenTreatmentDateInvalid(string? treatmentDate)
+    [Fact]
+    public void ShouldContainErrorWhenTreatmentDateInvalid()
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.TreatmentDate, treatmentDate)
+            .With(x => x.TreatmentDate, (DateTimeOffset?)null)
             .Create();
 
         //Act
@@ -677,7 +666,7 @@ public class ReferralDbModelValidatorTests
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.TreatmentDate, treatmentDate)
+            .With(x => x.TreatmentDate, PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(treatmentDate))
             .Create();
 
         //Act
@@ -753,15 +742,12 @@ public class ReferralDbModelValidatorTests
         validationResult.ShouldNotHaveValidationErrorFor(x => x.RepeatPeriod);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("invalid-date")]
-    public void ShouldContainErrorWhenFirstAppointmentDateInvalid(string? firstAppointmentDate)
+    [Fact]
+    public void ShouldContainErrorWhenFirstAppointmentDateInvalid()
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.FirstAppointmentDate, firstAppointmentDate)
+            .With(x => x.FirstAppointmentDate, (DateTimeOffset?)null)
             .Create();
 
         //Act
@@ -778,7 +764,7 @@ public class ReferralDbModelValidatorTests
     {
         //Arrange
         var dbModel = _fixture.Build<ReferralDbModel>()
-            .With(x => x.FirstAppointmentDate, firstAppointmentDate)
+            .With(x => x.FirstAppointmentDate, PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(firstAppointmentDate))
             .Create();
 
         //Act

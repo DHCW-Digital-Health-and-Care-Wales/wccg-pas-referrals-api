@@ -1,10 +1,10 @@
 using System.Text;
 using AutoFixture;
 using FluentAssertions;
-using Hl7.Fhir.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.Controllers.v1;
 using WCCG.PAS.Referrals.API.Services;
 using WCCG.PAS.Referrals.API.Unit.Tests.Extensions;
@@ -25,52 +25,17 @@ public class ReferralsControllerTests
     }
 
     [Fact]
-    public async Task CreateReferralShouldDeserializeBody()
-    {
-        //Arrange
-        var bundle = _fixture.Create<string>();
-        SetRequestBody(bundle);
-
-        //Act
-        await _sut.CreateReferral();
-
-        //Assert
-        _fixture.Mock<IFhirBundleSerializer>().Verify(x => x.Deserialize(bundle));
-    }
-
-    [Fact]
     public async Task CreateReferralShouldCallCreateReferralAsync()
     {
         //Arrange
-        SetRequestBody(_fixture.Create<string>());
-
-        var bundle = _fixture.Create<Bundle>();
-        _fixture.Mock<IFhirBundleSerializer>().Setup(x => x.Deserialize(It.IsAny<string>()))
-            .Returns(bundle);
+        var bundleJson = _fixture.Create<string>();
+        SetRequestBody(bundleJson);
 
         //Act
         await _sut.CreateReferral();
 
         //Assert
-        _fixture.Mock<IReferralService>().Verify(x => x.CreateReferralAsync(bundle));
-    }
-
-    [Fact]
-    public async Task CreateReferralShouldSerializeOutputBundle()
-    {
-        //Arrange
-        SetRequestBody(_fixture.Create<string>());
-
-        var outputBundle = _fixture.Create<Bundle>();
-
-        _fixture.Mock<IReferralService>().Setup(x => x.CreateReferralAsync(It.IsAny<Bundle>()))
-            .ReturnsAsync(outputBundle);
-
-        //Act
-        await _sut.CreateReferral();
-
-        //Assert
-        _fixture.Mock<IFhirBundleSerializer>().Verify(x => x.Serialize(outputBundle));
+        _fixture.Mock<IReferralService>().Verify(x => x.CreateReferralAsync(bundleJson));
     }
 
     [Fact]
@@ -81,8 +46,8 @@ public class ReferralsControllerTests
 
         var outputBundleJson = _fixture.Create<string>();
 
-        _fixture.Mock<IFhirBundleSerializer>().Setup(x => x.Serialize(It.IsAny<Bundle>()))
-            .Returns(outputBundleJson);
+        _fixture.Mock<IReferralService>().Setup(x => x.CreateReferralAsync(It.IsAny<string>()))
+            .ReturnsAsync(outputBundleJson);
 
         //Act
         var result = await _sut.CreateReferral();
@@ -90,6 +55,40 @@ public class ReferralsControllerTests
         //Assert
         var contentResult = result.Should().BeOfType<ContentResult>().Subject;
         contentResult.StatusCode.Should().Be(200);
+        contentResult.ContentType.Should().Be(FhirConstants.FhirMediaType);
+        contentResult.Content.Should().Be(outputBundleJson);
+    }
+
+    [Fact]
+    public async Task GetReferralShouldCallGetReferralAsync()
+    {
+        //Arrange
+        var referralId = _fixture.Create<string>();
+
+        //Act
+        await _sut.GetReferral(referralId);
+
+        //Assert
+        _fixture.Mock<IReferralService>().Verify(x => x.GetReferralAsync(referralId));
+    }
+
+    [Fact]
+    public async Task GetReferralShouldReturn200()
+    {
+        //Arrange
+        var referralId = _fixture.Create<string>();
+        var outputBundleJson = _fixture.Create<string>();
+
+        _fixture.Mock<IReferralService>().Setup(x => x.GetReferralAsync(It.IsAny<string>()))
+            .ReturnsAsync(outputBundleJson);
+
+        //Act
+        var result = await _sut.GetReferral(referralId);
+
+        //Assert
+        var contentResult = result.Should().BeOfType<ContentResult>().Subject;
+        contentResult.StatusCode.Should().Be(200);
+        contentResult.ContentType.Should().Be(FhirConstants.FhirMediaType);
         contentResult.Content.Should().Be(outputBundleJson);
     }
 

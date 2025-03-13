@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -5,6 +6,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace WCCG.PAS.Referrals.API.Swagger;
 
+[ExcludeFromCodeCoverage]
 public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 {
     private readonly IApiVersionDescriptionProvider _provider;
@@ -24,6 +26,10 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 
     private static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
     {
-        return new OpenApiInfo { Title = "Referrals API", Version = description.ApiVersion.ToString() };
+        return new OpenApiInfo
+        {
+            Title = "Referrals API",
+            Version = description.ApiVersion.ToString()
+        };
     }
 }
