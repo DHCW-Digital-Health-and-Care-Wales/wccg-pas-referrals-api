@@ -9,7 +9,7 @@ namespace WCCG.PAS.Referrals.API.Controllers.v1;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]/[action]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class ReferralsController : ControllerBase
 {
     private readonly ILogger<ReferralsController> _logger;

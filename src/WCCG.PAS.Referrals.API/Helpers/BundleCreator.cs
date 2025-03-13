@@ -99,7 +99,7 @@ public class BundleCreator : IBundleCreator
                     {
                         Receiver = new ResourceReference($"urn:uuid:{_organizationDestinationId}"),
                         Endpoint =
-                            $"{_bundleCreationConfig.EReferralsBaseUrl}{_bundleCreationConfig.EReferralsCreateReferralEndpoint}|0123456789"
+                            $"{_bundleCreationConfig.EReferralsBaseUrl}{_bundleCreationConfig.EReferralsCreateReferralEndpoint}|{FhirConstants.ServiceId}"
                     }
                 },
                 Sender = new ResourceReference($"urn:uuid:{_organizationReferringPracticeId}"),
@@ -124,7 +124,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.uk/StructureDefinition/BARSServiceRequest-request-referral" }
                 },
                 Identifier = new List<Identifier>
                 {
@@ -162,13 +162,11 @@ public class BundleCreator : IBundleCreator
                 Encounter = new ResourceReference($"urn:uuid:{_encounterRequesterId}"),
                 Occurrence = new Timing
                 {
-                    Event = new List<string> { PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.FirstAppointmentDate!.Value) }
-                        .AsReadOnly(),
+                    Event = new List<string> { PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.FirstAppointmentDate!.Value) },
                     Repeat = new Timing.RepeatComponent
                     {
-                        Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan(0, _referralDbModel.RepeatPeriod!.Length - 1),
-                            CultureInfo.InvariantCulture),
-                        PeriodUnit = _frequencyDictionary[char.ToUpperInvariant(_referralDbModel.RepeatPeriod!.Last())]
+                        Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan()[..1], CultureInfo.InvariantCulture),
+                        PeriodUnit = _frequencyDictionary[char.ToUpperInvariant(_referralDbModel.RepeatPeriod!.AsSpan()[^1])]
                     }
                 },
                 LocationCode =
@@ -201,11 +199,7 @@ public class BundleCreator : IBundleCreator
             FullUrl = $"urn:uuid:{_patientId}",
             Resource = new Patient
             {
-                Meta = new Meta
-                {
-                    Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Patient" }
-                        .AsReadOnly()
-                },
+                Meta = new Meta { Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Patient" } },
                 Identifier =
                     new List<Identifier>
                     {
@@ -269,7 +263,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }
                 },
                 Identifier =
                     new List<Identifier>
@@ -295,7 +289,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Practitioner" }
                 },
                 Identifier =
                     new List<Identifier>
@@ -321,7 +315,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }
                 },
                 Identifier =
                     new List<Identifier>
@@ -347,7 +341,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }
                 },
                 Identifier =
                     new List<Identifier>
@@ -373,7 +367,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }.AsReadOnly()
+                        new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Organization" }
                 },
                 Identifier =
                     new List<Identifier>
@@ -398,7 +392,6 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter" }
-                        .AsReadOnly()
                 },
                 Status = Encounter.EncounterStatus.Finished,
                 // Values provided by Jake
@@ -428,7 +421,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }.AsReadOnly()
+                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }
                 },
                 Extension =
                     new List<Extension>
@@ -462,7 +455,7 @@ public class BundleCreator : IBundleCreator
             Resource = new CarePlan
             {
                 Meta =
-                    new Meta { Profile = new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-CarePlan" }.AsReadOnly() },
+                    new Meta { Profile = new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-CarePlan" } },
                 Status = RequestStatus.Completed,
                 Intent = CarePlan.CarePlanIntent.Plan,
                 Subject = new ResourceReference($"urn:uuid:{_patientId}"),
@@ -481,7 +474,6 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile = new List<string> { "https://fhir.nhs.wales/StructureDefinition/DataStandardsWales-Encounter" }
-                        .AsReadOnly()
                 },
                 Status = Encounter.EncounterStatus.Planned,
 
@@ -513,7 +505,7 @@ public class BundleCreator : IBundleCreator
                 Meta = new Meta
                 {
                     Profile =
-                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }.AsReadOnly()
+                        new List<string> { "https://fhir.hl7.org.uk/StructureDefinition/UKCore-Appointment" }
                 },
                 Status = Appointment.AppointmentStatus.Waitlist,
                 Created = PrimitiveTypeConverter.ConvertTo<string>(_currentDate),

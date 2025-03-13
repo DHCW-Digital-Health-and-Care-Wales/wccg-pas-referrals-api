@@ -20,7 +20,6 @@ public class FhirConstants
     public const string SpecialityIdentifierSystem = "dhcw/SPEC";
     public const string LetterPrioritySystem = "DHCW/lttrPriority";
     public const string PatientCategorySystem = "dhcw/patientCategory";
-    public const string LinkIdSystem = "dhcw/LinkId";
     public const string WlistCodesSystem = "dhcw/WlistCodes";
     public const string IntentReferValuesSystem = "dhcw/IntentReferValues";
     public const string DatonsysSystem = "dhcw/Datonsys";
@@ -37,4 +36,5 @@ public class FhirConstants
     public const string ReferenceElementName = "Reference";
     public const string PractitionerType = "Practitioner";
     public const string OrganizationType = "Organization";
+    public const string ServiceId = "0123456789";
 }

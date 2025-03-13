@@ -49,7 +49,7 @@ public class BundleCreatorTests
         messageHeader.Destination.Should().HaveCount(1);
         messageHeader.Destination[0].Receiver.Reference.Should().Be(destinationOrganization!.FullUrl);
         messageHeader.Destination[0].Endpoint.Should()
-            .Be($"{_config.EReferralsBaseUrl}{_config.EReferralsCreateReferralEndpoint}|0123456789");
+            .Be($"{_config.EReferralsBaseUrl}{_config.EReferralsCreateReferralEndpoint}|{FhirConstants.ServiceId}");
         messageHeader.Sender.Reference.Should().Be(referringPracticeOrganization!.FullUrl);
         messageHeader.Source.Endpoint.Should().Be(_config.DentalUiBaseUrl);
         messageHeader.Reason.Coding.Should().HaveCount(1);
