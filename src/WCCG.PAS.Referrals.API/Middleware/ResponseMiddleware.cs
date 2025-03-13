@@ -9,12 +9,21 @@ using WCCG.PAS.Referrals.API.Extensions;
 
 namespace WCCG.PAS.Referrals.API.Middleware;
 
-public class ExceptionHandlingMiddleware
+public class ResponseMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly ILogger<ResponseMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    private readonly Dictionary<HttpStatusCode, (string Title, string ErrorMessage)> _cosmosErrorDictionary = new()
+    {
+        { HttpStatusCode.NotFound, ("CosmosDB: Document not found", "Referral with the provided ID was not found.") },
+        {
+            HttpStatusCode.TooManyRequests, ("CosmosDB: Too many requests", "Too many requests have been made within the allowed time.")
+        },
+        { HttpStatusCode.InternalServerError, ("CosmosDb: Unexpected error", "Unexpected error occurred while calling CosmosDB.") }
+    };
+
+    public ResponseMiddleware(RequestDelegate next, ILogger<ResponseMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -64,7 +73,13 @@ public class ExceptionHandlingMiddleware
                 body.Title = "Validation Failed";
                 body.Extensions = new Dictionary<string, object?>
                 {
-                    { "validationErrors", validationException.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }) }
+                    {
+                        "validationErrors", validationException.Errors.Select(e => new
+                        {
+                            e.PropertyName,
+                            e.ErrorMessage
+                        })
+                    }
                 };
                 break;
 
@@ -72,8 +87,9 @@ public class ExceptionHandlingMiddleware
                 _logger.CosmosDatabaseFailure(cosmosException);
 
                 statusCode = cosmosException.StatusCode;
-                body.Title = "Cosmos database failure";
-                body.Detail = cosmosException.Message;
+                var (title, errorMessage) = _cosmosErrorDictionary[statusCode];
+                body.Title = title;
+                body.Detail = errorMessage;
                 break;
 
             default:

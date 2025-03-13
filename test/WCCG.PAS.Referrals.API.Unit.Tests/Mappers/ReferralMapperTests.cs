@@ -227,7 +227,7 @@ public class ReferralMapperTests
     public void MapFromBundleShouldMapFirstAppointmentDate()
     {
         //Arrange
-        const string expectedValue = "2025-03-05T09:14:12.8371094Z";
+        var expectedValue = PrimitiveTypeConverter.ConvertTo<DateTimeOffset>("2025-03-05T09:14:12.8371094Z");
 
         //Act
         var result = _sut.MapFromBundle(_bundle);
@@ -255,7 +255,7 @@ public class ReferralMapperTests
     public void MapFromBundleShouldMapCreationDate()
     {
         //Arrange
-        const string expectedValue = "2025-02-19T09:14:12.8360738Z";
+        var expectedValue = PrimitiveTypeConverter.ConvertTo<DateTimeOffset>("2025-02-19T09:14:12.8360738Z");
 
         //Act
         var result = _sut.MapFromBundle(_bundle);
@@ -337,9 +337,7 @@ public class ReferralMapperTests
 
         //Assert
         result.Should().NotBeNull();
-
-        var parseResult = DateTime.TryParse(result.HealthBoardReceiveDate, out _);
-        parseResult.Should().BeTrue();
+        result.HealthBoardReceiveDate.Should().NotBeNull();
     }
 
     [Fact]
@@ -350,9 +348,7 @@ public class ReferralMapperTests
 
         //Assert
         result.Should().NotBeNull();
-
-        var parseResult = DateTime.TryParse(result.BookingDate, out _);
-        parseResult.Should().BeTrue();
+        result.BookingDate.Should().NotBeNull();
     }
 
     [Fact]
@@ -363,8 +359,6 @@ public class ReferralMapperTests
 
         //Assert
         result.Should().NotBeNull();
-
-        var parseResult = DateTime.TryParse(result.TreatmentDate, out _);
-        parseResult.Should().BeTrue();
+        result.TreatmentDate.Should().NotBeNull();
     }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WCCG.PAS.Referrals.API.Configuration;
@@ -18,10 +19,16 @@ builder.Services.AddSingleton<IValidateOptions<CosmosConfig>, ValidateCosmosConf
 builder.Services.AddOptions<ManagedIdentityConfig>().Bind(builder.Configuration.GetSection(ManagedIdentityConfig.SectionName));
 builder.Services.AddSingleton<IValidateOptions<ManagedIdentityConfig>, ValidateManagedIdentityConfigOptions>();
 
+//BundleCreationConfig
+builder.Services.AddOptions<BundleCreationConfig>().Bind(builder.Configuration.GetSection(BundleCreationConfig.SectionName));
+builder.Services.AddSingleton<IValidateOptions<BundleCreationConfig>, ValidateBundleCreationConfigOptions>();
+
+builder.Services.AddSingleton(new JsonSerializerOptions().ForFhirExtended());
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerJsonTextRequestOperationFilter>(); });
+builder.Services.AddSwaggerGen(options => { options.OperationFilter<SwaggerOperationFilter>(); });
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
 builder.Services.AddCosmosClient(builder.Environment.IsDevelopment(), builder.Configuration);
@@ -35,7 +42,7 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ResponseMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

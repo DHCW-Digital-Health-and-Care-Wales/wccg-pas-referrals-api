@@ -1,0 +1,9 @@
+{
+  "title": "Validation Failed",
+  "validationErrors": [
+    {
+      "PropertyName": "referralId",
+      "ErrorMessage": "Referral Id should be a valid GUID."
+    }
+  ]
+}

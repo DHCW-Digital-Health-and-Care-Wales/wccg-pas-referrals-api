@@ -1,0 +1,4 @@
+{
+  "title": "CosmosDB: Too many requests",
+  "detail": "Too many requests have been made within the allowed time."
+}

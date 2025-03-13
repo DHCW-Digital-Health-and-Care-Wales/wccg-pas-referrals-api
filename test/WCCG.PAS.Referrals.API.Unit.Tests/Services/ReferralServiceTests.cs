@@ -9,6 +9,7 @@ using Moq;
 using WCCG.PAS.Referrals.API.Constants;
 using WCCG.PAS.Referrals.API.DbModels;
 using WCCG.PAS.Referrals.API.Extensions;
+using WCCG.PAS.Referrals.API.Helpers;
 using WCCG.PAS.Referrals.API.Mappers;
 using WCCG.PAS.Referrals.API.Repositories;
 using WCCG.PAS.Referrals.API.Services;
@@ -20,31 +21,25 @@ namespace WCCG.PAS.Referrals.API.Unit.Tests.Services;
 public class ReferralServiceTests
 {
     private readonly IFixture _fixture = new Fixture().WithCustomizations();
-
-    private readonly ReferralService _sut;
-
-    private readonly JsonSerializerOptions _options = new JsonSerializerOptions()
-        .ForFhir(ModelInfo.ModelInspector)
-        .UsingMode(DeserializerModes.BackwardsCompatible);
-
-    private readonly Bundle _bundle;
-
-    public ReferralServiceTests()
-    {
-        _sut = _fixture.CreateWithFrozen<ReferralService>();
-
-        var bundleJson = File.ReadAllText("TestData/example-bundle.json");
-        _bundle = JsonSerializer.Deserialize<Bundle>(bundleJson, _options)!;
-    }
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions().ForFhirExtended();
+    private readonly string _bundleJson = File.ReadAllText("TestData/example-bundle.json");
 
     [Fact]
     public async Task CreateReferralAsyncShouldMapFromBundle()
     {
+        //Arrange
+        var referralDbModel = _fixture.Create<ReferralDbModel>();
+
+        _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
+            .Returns(referralDbModel);
+
+        var sut = CreateReferralService();
+
         //Act
-        await _sut.CreateReferralAsync(_bundle);
+        await sut.CreateReferralAsync(_bundleJson);
 
         //Assert
-        _fixture.Mock<IReferralMapper>().Verify(x => x.MapFromBundle(_bundle));
+        _fixture.Mock<IReferralMapper>().Verify(x => x.MapFromBundle(It.IsAny<Bundle>()));
     }
 
     [Fact]
@@ -56,8 +51,10 @@ public class ReferralServiceTests
         _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
             .Returns(referralDbModel);
 
+        var sut = CreateReferralService();
+
         //Act
-        await _sut.CreateReferralAsync(_bundle);
+        await sut.CreateReferralAsync(_bundleJson);
 
         //Assert
         _fixture.Mock<IValidator<ReferralDbModel>>().Verify(x => x.ValidateAsync(referralDbModel, It.IsAny<CancellationToken>()));
@@ -74,8 +71,10 @@ public class ReferralServiceTests
         _fixture.Mock<IValidator<ReferralDbModel>>().Setup(x => x.ValidateAsync(It.IsAny<ReferralDbModel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(validationResult);
 
+        var sut = CreateReferralService();
+
         //Act
-        var action = async () => await _sut.CreateReferralAsync(_bundle);
+        var action = async () => await sut.CreateReferralAsync(_bundleJson);
 
         //Assert
         (await action.Should().ThrowAsync<ValidationException>())
@@ -86,22 +85,28 @@ public class ReferralServiceTests
     public async Task CreateReferralAsyncShouldAdjustBundleWithDataModel()
     {
         //Arrange
-        var referralDbModel = _fixture.Create<ReferralDbModel>();
+        var referralDbModel = _fixture.Build<ReferralDbModel>()
+            .With(x => x.BookingDate, DateTimeOffset.UtcNow)
+            .Create();
 
         _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
             .Returns(referralDbModel);
 
+        var sut = CreateReferralService();
+
         //Act
-        await _sut.CreateReferralAsync(_bundle);
+        var result = await sut.CreateReferralAsync(_bundleJson);
 
         //Assert
-        var newReferralId = GetReferralIdFromBundle();
+        var bundle = JsonSerializer.Deserialize<Bundle>(result, _jsonSerializerOptions)!;
+
+        var newReferralId = GetReferralIdFromBundle(bundle);
         newReferralId.Should().Be(referralDbModel.ReferralId);
 
-        var newCaseNumber = GetCaseNumberFromBundle();
+        var newCaseNumber = GetCaseNumberFromBundle(bundle);
         newCaseNumber.Should().Be(referralDbModel.CaseNumber);
 
-        var newBookingDate = GetBookingDateFromBundle();
+        var newBookingDate = GetBookingDateFromBundle(bundle);
         newBookingDate.Should().Be(referralDbModel.BookingDate);
     }
 
@@ -114,33 +119,117 @@ public class ReferralServiceTests
         _fixture.Mock<IReferralMapper>().Setup(x => x.MapFromBundle(It.IsAny<Bundle>()))
             .Returns(referralDbModel);
 
+        var sut = CreateReferralService();
+
         //Act
-        await _sut.CreateReferralAsync(_bundle);
+        await sut.CreateReferralAsync(_bundleJson);
 
         //Assert
         _fixture.Mock<IReferralCosmosRepository>().Verify(x => x.CreateReferralAsync(referralDbModel));
     }
 
-    private string GetReferralIdFromBundle()
+    [Fact]
+    public async Task GetReferralAsyncShouldThrowWhenInvalidGuid()
     {
-        var serviceRequest = _bundle.GetResourceByType<ServiceRequest>()!;
-        return serviceRequest.Identifier.SelectWithCondition(x => x.System, NhsFhirConstants.ReferralIdSystem)!.Value;
+        //Arrange
+        var referralId = "123";
+
+        IEnumerable<ValidationFailure> validationFailures = [new("referralId", "Referral Id should be a valid GUID.")];
+
+        var sut = CreateReferralService();
+
+        //Act
+        var action = async () => await sut.GetReferralAsync(referralId);
+
+        //Assert
+        (await action.Should().ThrowAsync<ValidationException>())
+            .Which.Errors.Should().BeEquivalentTo(validationFailures);
     }
 
-    private string GetCaseNumberFromBundle()
+    [Fact]
+    public async Task GetReferralAsyncShouldCallGetReferralAsync()
     {
-        var serviceRequest = _bundle.GetResourceByType<ServiceRequest>()!;
-        var patient = _bundle.GetResourceByUrl<Patient>(serviceRequest.Subject.Reference)!;
+        //Arrange
+        var referralId = Guid.NewGuid().ToString();
+
+        var sut = CreateReferralService();
+
+        //Act
+        await sut.GetReferralAsync(referralId);
+
+        //Assert
+        _fixture.Mock<IReferralCosmosRepository>().Verify(x => x.GetReferralAsync(referralId));
+    }
+
+    [Fact]
+    public async Task GetReferralAsyncShouldCallCreateBundle()
+    {
+        //Arrange
+        var referralId = Guid.NewGuid().ToString();
+
+        var dbModel = _fixture.Create<ReferralDbModel>();
+        _fixture.Mock<IReferralCosmosRepository>().Setup(x => x.GetReferralAsync(It.IsAny<string>()))
+            .ReturnsAsync(dbModel);
+
+        var sut = CreateReferralService();
+
+        //Act
+        await sut.GetReferralAsync(referralId);
+
+        //Assert
+        _fixture.Mock<IBundleCreator>().Verify(x => x.CreateBundle(dbModel));
+    }
+
+    [Fact]
+    public async Task GetReferralAsyncShouldReturnBundleJson()
+    {
+        //Arrange
+        var referralId = Guid.NewGuid().ToString();
+
+        var bundle = new Bundle { Id = _fixture.Create<string>() };
+        _fixture.Mock<IBundleCreator>().Setup(x => x.CreateBundle(It.IsAny<ReferralDbModel>()))
+            .Returns(bundle);
+        var expectedJson = JsonSerializer.Serialize(bundle, _jsonSerializerOptions);
+
+        var sut = CreateReferralService();
+
+        //Act
+        var result = await sut.GetReferralAsync(referralId);
+
+        //Assert
+        result.Should().Be(expectedJson);
+    }
+
+    private static string GetReferralIdFromBundle(Bundle bundle)
+    {
+        var serviceRequest = bundle.GetResourceByType<ServiceRequest>()!;
+        return serviceRequest.Identifier.SelectWithCondition(x => x.System, FhirConstants.ReferralIdSystem)!.Value;
+    }
+
+    private static string GetCaseNumberFromBundle(Bundle bundle)
+    {
+        var serviceRequest = bundle.GetResourceByType<ServiceRequest>()!;
+        var patient = bundle.GetResourceByUrl<Patient>(serviceRequest.Subject.Reference)!;
         return patient.Identifier
-            .SelectWithCondition(x => x.System, NhsFhirConstants.PasIdentifierSystem)
+            .SelectWithCondition(x => x.System, FhirConstants.PasIdentifierSystem)
             !.Value;
     }
 
-    private string GetBookingDateFromBundle()
+    private static DateTimeOffset GetBookingDateFromBundle(Bundle bundle)
     {
-        var serviceRequest = _bundle.GetResourceByType<ServiceRequest>()!;
-        var encounter = _bundle.GetResourceByUrl<Encounter>(serviceRequest.Encounter.Reference)!;
-        var appointment = _bundle.GetResourceByUrl<Appointment>(encounter.Appointment.FirstOrDefault()!.Reference)!;
-        return appointment.Created;
+        var serviceRequest = bundle.GetResourceByType<ServiceRequest>()!;
+        var encounter = bundle.GetResourceByUrl<Encounter>(serviceRequest.Encounter.Reference)!;
+        var appointment = bundle.GetResourceByUrl<Appointment>(encounter.Appointment.FirstOrDefault()!.Reference)!;
+        return PrimitiveTypeConverter.ConvertTo<DateTimeOffset>(appointment.Created);
+    }
+
+    private ReferralService CreateReferralService()
+    {
+        return new ReferralService(
+            _fixture.Mock<IReferralMapper>().Object,
+            _fixture.Mock<IReferralCosmosRepository>().Object,
+            _fixture.Mock<IBundleCreator>().Object,
+            _jsonSerializerOptions,
+            _fixture.Mock<IValidator<ReferralDbModel>>().Object);
     }
 }
