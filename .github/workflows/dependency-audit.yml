@@ -1,0 +1,35 @@
+name: .NET Dependency Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout branch"
+        uses: actions/checkout@v4
+
+      - name: "Setup .NET"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: "Restore dependencies"
+        run: dotnet restore
+
+      - name: "Check for vulnerable dependencies"
+        run: dotnet list package --vulnerable
+
+      - name: "Install dotnet-outdated"
+        run: dotnet tool install --global dotnet-outdated-tool
+
+      - name: "Check for outdated packages"
+        run: dotnet outdated --fail-on-updates
