@@ -79,6 +79,5 @@ jobs:
         if: always()
         with:
           trx_files: "${{ github.workspace }}/**/*.trx"
-          check_name: "Unit Test Results"
-          job_summary: false
+          job_summary: true
           check_run: false
