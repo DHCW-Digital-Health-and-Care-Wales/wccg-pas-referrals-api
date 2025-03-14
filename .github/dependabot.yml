@@ -7,7 +7,6 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
-    security-updates-only: false
     pull-request-branch-name:
       separator: "-"
     labels:
