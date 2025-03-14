@@ -59,11 +59,7 @@ public class ResponseMiddlewareTests
         var exception = new ValidationException(_fixture.CreateMany<ValidationFailure>());
         var host = StartHost(exception);
 
-        var expectedExtensions = JsonSerializer.Serialize(exception.Errors.Select(e => new
-        {
-            e.PropertyName,
-            e.ErrorMessage
-        }));
+        var expectedExtensions = JsonSerializer.Serialize(exception.Errors.Select(e => e.ErrorMessage));
 
         //Act
         var response = await host.GetTestClient().GetAsync(HostProvider.TestEndpoint);
