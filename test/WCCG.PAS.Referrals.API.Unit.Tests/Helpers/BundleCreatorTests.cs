@@ -41,7 +41,7 @@ public class BundleCreatorTests
 
         var messageHeaderEntry = GetEntryComponentByResource<MessageHeader>(bundle);
         messageHeaderEntry.Should().NotBeNull();
-        messageHeaderEntry!.FullUrl.Should().BeValidFhirUrl();
+        messageHeaderEntry.FullUrl.Should().BeValidFhirUrl();
 
         var messageHeader = messageHeaderEntry.Resource as MessageHeader;
         (messageHeader!.Event as Coding)!.System.Should().Be(FhirConstants.EvenBarSystem);
@@ -78,7 +78,7 @@ public class BundleCreatorTests
 
         var serviceRequestEntry = GetEntryComponentByResource<ServiceRequest>(bundle);
         serviceRequestEntry.Should().NotBeNull();
-        serviceRequestEntry!.FullUrl.Should().BeValidFhirUrl();
+        serviceRequestEntry.FullUrl.Should().BeValidFhirUrl();
 
         var serviceRequest = serviceRequestEntry.Resource as ServiceRequest;
         serviceRequest!.Meta.Profile.Should().HaveCount(1)
@@ -148,7 +148,7 @@ public class BundleCreatorTests
         //Assert
         var patientEntry = GetEntryComponentByResource<Patient>(bundle);
         patientEntry.Should().NotBeNull();
-        patientEntry!.FullUrl.Should().BeValidFhirUrl();
+        patientEntry.FullUrl.Should().BeValidFhirUrl();
 
         var patient = patientEntry.Resource as Patient;
         patient!.Meta.Profile.Should().HaveCount(1)
@@ -188,7 +188,7 @@ public class BundleCreatorTests
         //Assert
         var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.ReceivingClinicianId);
         practitionerEntry.Should().NotBeNull();
-        practitionerEntry!.FullUrl.Should().BeValidFhirUrl();
+        practitionerEntry.FullUrl.Should().BeValidFhirUrl();
 
         var practitioner = practitionerEntry.Resource as Practitioner;
         practitioner!.Meta.Profile.Should().HaveCount(1)
@@ -210,7 +210,7 @@ public class BundleCreatorTests
         //Assert
         var practitionerEntry = GetEntryComponentByResource<Practitioner>(bundle, FhirConstants.RequestingPractitionerId);
         practitionerEntry.Should().NotBeNull();
-        practitionerEntry!.FullUrl.Should().BeValidFhirUrl();
+        practitionerEntry.FullUrl.Should().BeValidFhirUrl();
 
         var practitioner = practitionerEntry.Resource as Practitioner;
         practitioner!.Meta.Profile.Should().HaveCount(1)
@@ -232,7 +232,7 @@ public class BundleCreatorTests
         //Assert
         var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DhaCodeId);
         organizationEntry.Should().NotBeNull();
-        organizationEntry!.FullUrl.Should().BeValidFhirUrl();
+        organizationEntry.FullUrl.Should().BeValidFhirUrl();
 
         var organization = organizationEntry.Resource as Organization;
         organization!.Meta.Profile.Should().HaveCount(1)
@@ -254,7 +254,7 @@ public class BundleCreatorTests
         //Assert
         var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.ReferringPracticeId);
         organizationEntry.Should().NotBeNull();
-        organizationEntry!.FullUrl.Should().BeValidFhirUrl();
+        organizationEntry.FullUrl.Should().BeValidFhirUrl();
 
         var organization = organizationEntry.Resource as Organization;
         organization!.Meta.Profile.Should().HaveCount(1)
@@ -276,7 +276,7 @@ public class BundleCreatorTests
         //Assert
         var organizationEntry = GetEntryComponentByResource<Organization>(bundle, FhirConstants.DestinationId);
         organizationEntry.Should().NotBeNull();
-        organizationEntry!.FullUrl.Should().BeValidFhirUrl();
+        organizationEntry.FullUrl.Should().BeValidFhirUrl();
 
         var organization = organizationEntry.Resource as Organization;
         organization!.Meta.Profile.Should().HaveCount(1)
@@ -300,7 +300,7 @@ public class BundleCreatorTests
 
         var encounterEntry = GetEncounterByStatus(bundle, Encounter.EncounterStatus.Finished);
         encounterEntry.Should().NotBeNull();
-        encounterEntry!.FullUrl.Should().BeValidFhirUrl();
+        encounterEntry.FullUrl.Should().BeValidFhirUrl();
 
         var encounter = encounterEntry.Resource as Encounter;
         encounter!.Meta.Profile.Should().HaveCount(1)
@@ -334,7 +334,7 @@ public class BundleCreatorTests
 
         var appointmentEntry = GetAppointmentByStatus(bundle, Appointment.AppointmentStatus.Fulfilled);
         appointmentEntry.Should().NotBeNull();
-        appointmentEntry!.FullUrl.Should().BeValidFhirUrl();
+        appointmentEntry.FullUrl.Should().BeValidFhirUrl();
 
         var appointment = appointmentEntry.Resource as Appointment;
         appointment!.Meta.Profile.Should().HaveCount(1)
@@ -363,7 +363,7 @@ public class BundleCreatorTests
 
         var carePlanEntry = GetEntryComponentByResource<CarePlan>(bundle);
         carePlanEntry.Should().NotBeNull();
-        carePlanEntry!.FullUrl.Should().BeValidFhirUrl();
+        carePlanEntry.FullUrl.Should().BeValidFhirUrl();
 
         var carePlan = carePlanEntry.Resource as CarePlan;
         carePlan!.Meta.Profile.Should().HaveCount(1)
@@ -389,7 +389,7 @@ public class BundleCreatorTests
 
         var encounterEntry = GetEncounterByStatus(bundle, Encounter.EncounterStatus.Planned);
         encounterEntry.Should().NotBeNull();
-        encounterEntry!.FullUrl.Should().BeValidFhirUrl();
+        encounterEntry.FullUrl.Should().BeValidFhirUrl();
 
         var encounter = encounterEntry.Resource as Encounter;
         encounter!.Meta.Profile.Should().HaveCount(1)
@@ -424,7 +424,7 @@ public class BundleCreatorTests
 
         var appointmentEntry = GetAppointmentByStatus(bundle, Appointment.AppointmentStatus.Waitlist);
         appointmentEntry.Should().NotBeNull();
-        appointmentEntry!.FullUrl.Should().BeValidFhirUrl();
+        appointmentEntry.FullUrl.Should().BeValidFhirUrl();
 
         var appointment = appointmentEntry.Resource as Appointment;
         appointment!.Meta.Profile.Should().HaveCount(1)
