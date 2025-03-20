@@ -165,7 +165,7 @@ public class BundleCreator : IBundleCreator
                     Event = new List<string> { PrimitiveTypeConverter.ConvertTo<string>(_referralDbModel.FirstAppointmentDate!.Value) },
                     Repeat = new Timing.RepeatComponent
                     {
-                        Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan()[..1], CultureInfo.InvariantCulture),
+                        Period = decimal.Parse(_referralDbModel.RepeatPeriod.AsSpan()[..^1], CultureInfo.InvariantCulture),
                         PeriodUnit = _frequencyDictionary[char.ToUpperInvariant(_referralDbModel.RepeatPeriod!.AsSpan()[^1])]
                     }
                 },

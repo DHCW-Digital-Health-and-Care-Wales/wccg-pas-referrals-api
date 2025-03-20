@@ -122,7 +122,7 @@ public class BundleCreatorTests
         (serviceRequest.Occurrence as Timing)!.Event.Should().HaveCount(1);
         (serviceRequest.Occurrence as Timing)!.Event.First().Should()
             .Be(PrimitiveTypeConverter.ConvertTo<string>(dbModel.FirstAppointmentDate!.Value));
-        (serviceRequest.Occurrence as Timing)!.Repeat.Period.Should().Be(6);
+        (serviceRequest.Occurrence as Timing)!.Repeat.Period.Should().Be(10);
         (serviceRequest.Occurrence as Timing)!.Repeat.PeriodUnit.Should().Be(Timing.UnitsOfTime.D);
         serviceRequest.LocationCode.Should().HaveCount(1);
         serviceRequest.LocationCode[0].Coding.Should().HaveCount(1);
@@ -468,7 +468,7 @@ public class BundleCreatorTests
     {
         return _fixture.Build<ReferralDbModel>()
             .With(x => x.Priority, "R")
-            .With(x => x.RepeatPeriod, "6D")
+            .With(x => x.RepeatPeriod, "10D")
             .Create();
     }
 }
