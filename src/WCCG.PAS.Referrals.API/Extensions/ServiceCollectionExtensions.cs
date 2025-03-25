@@ -8,6 +8,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using WCCG.PAS.Referrals.API.Configuration;
 using WCCG.PAS.Referrals.API.DbModels;
+using WCCG.PAS.Referrals.API.Handlers;
 using WCCG.PAS.Referrals.API.Helpers;
 using WCCG.PAS.Referrals.API.Mappers;
 using WCCG.PAS.Referrals.API.Repositories;
@@ -41,6 +42,11 @@ public static class ServiceCollectionExtensions
 
     public static void AddCosmosClient(this IServiceCollection services, bool isDevelopmentEnvironment, IConfiguration configuration)
     {
+        services.AddSingleton<AppInsightsRequestHandler>();
+
+        var provider = services.BuildServiceProvider();
+        var requestHandler = provider.GetRequiredService<AppInsightsRequestHandler>();
+
         var cosmosClientOptions = new CosmosClientOptions
         {
             SerializerOptions = new CosmosSerializationOptions
@@ -48,7 +54,8 @@ public static class ServiceCollectionExtensions
                 PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase,
                 IgnoreNullValues = false
             },
-            ConnectionMode = ConnectionMode.Gateway, // TODO: Temporary workaround
+            ConnectionMode = ConnectionMode.Direct,
+            CustomHandlers = { requestHandler }
         };
 
         var cosmosConfigSection = configuration.GetRequiredSection(CosmosConfig.SectionName);
@@ -59,7 +66,7 @@ public static class ServiceCollectionExtensions
         TokenCredential tokenCredential;
         if (isDevelopmentEnvironment)
         {
-            tokenCredential = new AzureCliCredential();
+            tokenCredential = new DefaultAzureCredential();
         }
         else
         {
@@ -73,10 +80,9 @@ public static class ServiceCollectionExtensions
             cosmosEndpoint,
             tokenCredential,
             [(cosmosDatabaseName, cosmosContainerName)],
-            cosmosClientOptions);
-        // Warning: Potentially missing GetAwaiter().GetResult()
+            cosmosClientOptions).GetAwaiter().GetResult();
 
-        services.AddSingleton(_ => cosmosClient.Result);
+        services.AddSingleton(_ => cosmosClient);
     }
 
     public static void AddCosmosRepositories(this IServiceCollection services)
